@@ -1,6 +1,6 @@
-PROGRAM = test_stack_manager
+PROGRAM = example
 
-INCLUDEDIRS=-I /home/jcai/Applications/gem5_smm/jcai/programs/smm/stack_management/stack_manager/
+INCLUDEDIRS=-I /home/jcai/Documents/gem5/programs/smm/stack_management/stack_manager
 INCLUDE=-include stack_manager.h
 LIBDIRS= 
 LIBS = -lm 

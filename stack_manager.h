@@ -16,11 +16,10 @@ extern char *_spm_stack_base, *_mem_stack_base;
 extern long long int _stack_depth;
 extern STACK_ENTRY _stack[];
 
-inline void _smm_stack_begin() __attribute__((always_inline));
-inline void _smm_stack_end() __attribute__((always_inline));
-
-
 void _sstore();
 void _sload();
+
+char * _l2g(char *);
+char * _g2l(char *);
 
 #endif

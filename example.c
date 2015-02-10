@@ -5,7 +5,7 @@ int g = 0;
 
 int f1(int, int);
 int f2(int, int);
-int f3(int, int, int);
+int f3(int *, int, int);
 int f4(int);
 
 int f1(int a, int b) {
@@ -31,14 +31,16 @@ int f1(int a, int b) {
 
 int f2(int a, int b) {
 	int f3_ret, f4_ret;
-	printf("\t\tf2: calls f3(%d, %d, %d)\n", a+b, a-b, a*b);
+	int c = a+b;
+	printf("\t\tf2: calls f3(0x%llx = %d, %d, %d)\n", (unsigned long long)&c, c, a-b, a*b);
+	int *p = (int *)_l2g((char *)&c);
 	_sstore();
 	putSP(_spm_stack_base); // reset the stack pointer to SPM stack base
-	g = f3(a+b, a-b, a*b);
+	g = f3(p, a-b, a*b);
 	putSP(_stack[_stack_depth-1].spm_addr); // restore the stack pointer to point to the original location in SPM
 	_sload();
 	f3_ret = g;
-	printf("\t\tf2: f3 returns %d\n", f3_ret);
+	printf("\t\tf2: f3 returns %d, c = %d\n", f3_ret, c);
 	printf("\t\tf2: calls f4(%d)\n", f3_ret/2);
 	_sstore();
 	putSP(_spm_stack_base); // reset the stack pointer to SPM stack base
@@ -50,8 +52,12 @@ int f2(int a, int b) {
 	return f4_ret;
 }
 
-int f3(int a, int b, int c) {
-	return  a + b - c;
+int f3(int *a, int b, int c) {
+	char *sp_temp;
+	getSP(sp_temp);
+	*(int *)_g2l((char *)a) = 6;
+	//printf("\t\t\tf3:a=0x%llx = %d, b=%d, c=%d, sp = 0x%llx\n", (unsigned long long)a, *a, b, c, (unsigned long long)sp_temp);
+	return  *(int *)_g2l((char *)a) + b - c;
 }
 
 int f4(int a) {
@@ -78,7 +84,6 @@ int main(int arg, char **argv)
 	printf("main: _spm_stack_base=0x%llx, _mem_stack_base=0x%llx\n", (unsigned long long)_spm_stack_base, (unsigned long long)_mem_stack_base);
 	printf("main: calls f1(%d, %d)\n", 3, 4);
 	printf("main: f1 returns %d\n", f1(3, 4));
-
 
 	// end the runtime environment
 	putSP(_mem_stack_base);
