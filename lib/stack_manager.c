@@ -1,4 +1,5 @@
 #include <string.h>
+#include "dma.h"
 
 // stack Management Library
 
@@ -22,7 +23,8 @@ void _sstore() {
 		_stack[_stack_depth].mem_addr = _stack[_stack_depth-1].mem_addr - _stack[_stack_depth].ssize; // calculate the size of the caller stack frame
 	}
 	_stack[_stack_depth].status = 0; // update status of function stack to indicate it is in memory
-	memcpy((void *)_stack[_stack_depth].mem_addr, (void *)_stack[_stack_depth].spm_addr, _stack[_stack_depth].ssize); // copy caller stack frame from SPM to memory
+	//memcpy((void *)_stack[_stack_depth].mem_addr, (void *)_stack[_stack_depth].spm_addr, _stack[_stack_depth].ssize); // copy caller stack frame from SPM to memory
+	dma(_stack[_stack_depth].spm_addr, _stack[_stack_depth].mem_addr, _stack[_stack_depth].ssize, SPM2MEM);	// copy caller stack frame from SPM to memory
 	_stack_depth++; // increase stack depth counter
 	//putSP(_spm_stack_base); // reset the stack pointer to SPM stack base
 }
@@ -32,7 +34,8 @@ void _sload() {
 	// bring back caller stack frame from memory to SPM
 	//putSP(_spm_sp); // restore the stack pointer to point to the original location in SPM
 	_stack_depth--; // decrease stack depth counter
-	memcpy((void *)_stack[_stack_depth].spm_addr, (void *)_stack[_stack_depth].mem_addr, _stack[_stack_depth].ssize);// copy back caller stack frame from memory to SPM
+	//memcpy((void *)_stack[_stack_depth].spm_addr, (void *)_stack[_stack_depth].mem_addr, _stack[_stack_depth].ssize);// copy back caller stack frame from memory to SPM
+	dma((void *)_stack[_stack_depth].spm_addr, (void *)_stack[_stack_depth].mem_addr, _stack[_stack_depth].ssize, MEM2SPM);// copy back caller stack frame from memory to SPM
 }
 
 // pointer threats resolution
