@@ -79,6 +79,7 @@ int main(int arg, char **argv)
 	getSP(_mem_stack_base); // save the original value of stack pointer pointing to memory location
 	_spm_stack_base = &_spm_end; // use the upper bound of SPM address range as the new stack base
 	putSP(_spm_stack_base); // make stack pointer point to the new stack base in SPM
+	//__asm __volatile("mov %0, %%rsp;\n"::"m"(_spm_stack_base):"%rsp");
 	
 	// workload
 	printf("main: _spm_stack_base=0x%llx, _mem_stack_base=0x%llx\n", (unsigned long long)_spm_stack_base, (unsigned long long)_mem_stack_base);

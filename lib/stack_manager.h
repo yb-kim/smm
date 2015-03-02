@@ -14,7 +14,7 @@ typedef struct {
 extern char _spm_begin, _spm_end;
 extern char *_spm_stack_base, *_mem_stack_base;
 extern long long int _stack_depth;
-extern STACK_ENTRY _stack[];
+extern STACK_ENTRY _stack[20];
 
 void _sstore();
 void _sload();
