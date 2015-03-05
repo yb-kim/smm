@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import getopt
 import os
 import subprocess
@@ -29,10 +31,10 @@ $(PROGRAM): $(OBJECTS)
 	llvm-dis < $@.bc > $@.ll
 	llc -march=cpp $@.ll -o $@_ll.cpp
 	objdump -d $@ > $@.dis
-	opt -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smm-stack < $@.bc > $@_opt.bc
-	$(CC) $@_opt.bc -o $@_opt $(LDFLAGS) 
-	llvm-dis < $@_opt.bc > $@_opt.ll
-	objdump -d $@_opt > $@_opt.dis
+	opt -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smm-stack < $@.bc > opt_$@.bc
+	$(CC) opt_$@.bc -o opt_$@ $(LDFLAGS) 
+	llvm-dis < opt_$@.bc > opt_$@.ll
+	objdump -d opt_$@ > opt_$@.dis
 
 stack_manager.bc:$(SMMDIR)/stack_manager.c
 	$(CC) -emit-llvm -c $(CFLAGS) $< -o $@
@@ -41,7 +43,7 @@ stack_manager.bc:$(SMMDIR)/stack_manager.c
 	$(CC) -emit-llvm -c $(CFLAGS) $< -o $@
 
 clean:
-	-rm -rf  $(PROGRAM) $(PROGRAM)_opt *s. *.o *.bc *.ll *_ll.cpp *.dis *.txt m5out	
+	-rm -rf  $(PROGRAM) opt_$(PROGRAM) *s. *.o *.bc *.ll *_ll.cpp *.dis *.txt m5out	
     """
 
 	# Create the linker script for SPM setup
@@ -57,9 +59,10 @@ clean:
 				i = i + 1
     				line = inFile[i]
 				while (line.find("==================================================") == -1):
-    					outFile.write(line + "\n")
 					if line.find("executable_start") != -1:
-					  	outFile.write("  _spm_begin = .;\n  . = . + 0x100000;\n  _spm_end = .;\n")
+					  	outFile.write(line.replace("0x400000", "0x000000") + "\n  _spm_begin = .;\n  . = . + 0x100000;\n  _spm_end = .;\n")
+					else:
+    						outFile.write(line + "\n")
 					i = i+1
 					line = inFile[i]
 				break;
@@ -95,11 +98,16 @@ def create_runme(arguments="", output=""):
 	if (not os.path.isfile("rumme.sh")):
 		with open("runme.sh", "w") as f:
 			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + binary
+			text_opt = "$SIMDIR/build/X86/gem5.debug $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
 			if (output != ""):
 				text = text + " --output=\"" + output + "\""
+				text_opt = text_opt + " --output=\"opt_" + output + "\""
 			f.write(text + "\n")
+			f.write(text_opt + "\n")
+    		subprocess.Popen("chmod 755 runme.sh", stdout=subprocess.PIPE, shell=True)
+		
 
 
 # Get options
