@@ -11,7 +11,7 @@ def create_makefile():
 	makefile = """
 PROGRAM = ${binary}
 
-SMMDIR=/home/jcai/Documents/smm/stack_manager/lib
+SMMDIR=/home/jcai/Documents/smmstack/lib
 
 INCLUDEDIRS=-I$(SMMDIR)
 INCLUDE=-include stack_manager.h
@@ -113,25 +113,23 @@ def create_runme(arguments="", output=""):
 # Get options
 if __name__ == "__main__":
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "-h", ["help", "make", "args=", "output=", "run", "clean"]) 
+		opts, args = getopt.getopt(sys.argv[1:], "-h", ["help", "configure", "args=", "output=", "clean"]) 
 	except getopt.GetoptError as err:
 		print str(err)
 		sys.exit(2)
 	arguments = ""
 	output = ""
-	needToCreateRunme = 0
+	createConfigurations = 0
 	for opt, arg in opts:
 		if opt in ("-h", "--help"):
-			print 'smm --make --run --clean'
+			print 'smm --configure --args --output --clean'
 			sys.exit()
-		elif opt in ("--make"):
-			create_makefile()
+		elif opt in ("--configure"):
+			createConfigurations = 1
 		elif opt in ("--args"):
 			arguments = arg
 		elif opt in ("--output"):
 			output = arg
-		elif opt in ("--run"):
-			needToCreateRunme = 1
 		elif opt in ("--clean"):
 			if (os.path.isfile("spm.ld")):
     				subprocess.Popen("rm spm.ld", stdout=subprocess.PIPE, shell=True)
@@ -141,5 +139,6 @@ if __name__ == "__main__":
     				subprocess.Popen("rm runme.sh", stdout=subprocess.PIPE, shell=True)
 		else:
 			assert False, "unhandled option"
-		if needToCreateRunme:
-			create_runme(arguments, output)
+	if createConfigurations:
+		create_makefile()
+		create_runme(arguments, output)
