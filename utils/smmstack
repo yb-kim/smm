@@ -98,14 +98,15 @@ def create_runme(arguments="", output=""):
 	if (not os.path.isfile("rumme.sh")):
 		with open("runme.sh", "w") as f:
 			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + binary
-			text_opt = "$SIMDIR/build/X86/gem5.debug $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
+			opt_text = "$SIMDIR/build/X86/gem5.debug $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
+				opt_text = opt_text + " -o \"" + arguments + "\""
 			if (output != ""):
 				text = text + " --output=\"" + output + "\""
-				text_opt = text_opt + " --output=\"opt_" + output + "\""
+				opt_text = opt_text + " --output=\"opt_" + output + "\""
 			f.write(text + "\n")
-			f.write(text_opt + "\n")
+			f.write(opt_text + "\n")
     		subprocess.Popen("chmod 755 runme.sh", stdout=subprocess.PIPE, shell=True)
 		
 
