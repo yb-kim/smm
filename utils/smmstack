@@ -95,7 +95,7 @@ clean:
 def create_runme(arguments="", output=""):
 	binary = os.path.basename(os.getcwd())
 	# Create a runme script
-	if (not os.path.isfile("rumme.sh")):
+	if (not os.path.isfile("runme.sh")):
 		with open("runme.sh", "w") as f:
 			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + binary
 			opt_text = "$SIMDIR/build/X86/gem5.debug $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
