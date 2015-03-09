@@ -6,7 +6,8 @@ import subprocess
 import sys
 
 
-def create_makefile():
+# Create a makefile for a SMM architecture
+def create_smm_makefile():
 	#  make file
 	makefile = """
 PROGRAM = ${binary}
@@ -29,9 +30,9 @@ $(PROGRAM): $(OBJECTS)
 	llvm-link -o $@.bc $(OBJECTS)
 	$(CC) -o $@ $@.bc $(LDFLAGS)
 	llvm-dis < $@.bc > $@.ll
-	llc -march=cpp $@.ll -o $@_ll.cpp
+	#llc -march=cpp $@.ll -o $@_ll.cpp
 	objdump -d $@ > $@.dis
-	opt -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smm-stack < $@.bc > opt_$@.bc
+	opt -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smmstack < $@.bc > opt_$@.bc
 	$(CC) opt_$@.bc -o opt_$@ $(LDFLAGS) 
 	llvm-dis < opt_$@.bc > opt_$@.ll
 	objdump -d opt_$@ > opt_$@.dis
@@ -91,14 +92,14 @@ clean:
 			makefile = makefile.replace("${sourceFileExtension}", sourceFileExtension)
 			f.write(makefile)
 
-
-def create_runme(arguments="", output=""):
+# Create runme file for a SMM architecture
+def create_smm_runme(arguments="", output=""):
 	binary = os.path.basename(os.getcwd())
-	# Create a runme script
+	# Create a runme file 
 	if (not os.path.isfile("runme.sh")):
 		with open("runme.sh", "w") as f:
-			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + binary
-			opt_text = "$SIMDIR/build/X86/gem5.debug $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
+			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + binary
+			opt_text = "$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
 				opt_text = opt_text + " -o \"" + arguments + "\""
@@ -111,22 +112,92 @@ def create_runme(arguments="", output=""):
 		
 
 
+# Create a makefile for a cache-based architecture
+def create_cache_makefile():
+	#  Makefile
+	makefile = """
+PROGRAM = ${binary}
+
+INCLUDEDIRS=
+INCLUDE=
+LIBDIRS=
+LIBS = -lm
+
+OBJECTS = ${objectsUnfold}
+CC=clang
+CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -O0
+LDFLAGS = $(LIBDIRS) $(LIBS) -static 
+
+all: $(PROGRAM)
+
+$(PROGRAM): $(OBJECTS)
+	llvm-link -o $@.bc $(OBJECTS)
+	$(CC) -o $@ $@.bc $(LDFLAGS)
+	llvm-dis < $@.bc > $@.ll
+	#llc -march=cpp $@.ll -o $@_ll.cpp
+	objdump -d $@ > $@.dis
+
+%.bc: %${sourceFileExtension}
+	$(CC) -emit-llvm -c $(CFLAGS) $< -o $@
+
+clean:
+	-rm -rf  $(PROGRAM) *s. *.o *.bc *.ll *_ll.cpp *.dis *.txt m5out	
+    """
+	# Create the makefile using the created linker script
+	if (not os.path.isfile("Makefile")): 
+		cwd = os.getcwd()
+		files = os.listdir(cwd)
+		objects = []
+		sourceFileExtension = ""
+		for i in range(len(files)):
+			(file, extension) = os.path.splitext(files[i])
+			if(extension == ".c" or extension == ".cpp" or extension == ".cc"):
+				objects.append(file)
+				if sourceFileExtension == "":
+					sourceFileExtension = extension
+		objects = list(set(objects))
+		objectsUnfold = ""
+	   	for i in range(len(objects)):
+			objectsUnfold = objectsUnfold + " " + objects[i] + ".bc"
+		# Use the name of current folder as the name of generated binary file
+		binary = os.path.basename(cwd)
+		with open('Makefile', 'w') as f:
+			makefile = makefile.replace("${objectsUnfold}", objectsUnfold)
+			makefile = makefile.replace("${binary}", binary)
+			makefile = makefile.replace("${sourceFileExtension}", sourceFileExtension)
+			f.write(makefile)
+
+def create_cache_runme(arguments="", output=""):
+	binary = os.path.basename(os.getcwd())
+	# Create a runme script
+	if (not os.path.isfile("runme.sh")):
+		with open("runme.sh", "w") as f:
+			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_cache_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/cache -r $SIMDIR/configs/example/se.py --cpu-type=atomic --caches -c " + binary
+			if (arguments != ""):
+				text = text + " -o \"" + arguments + "\""
+			if (output != ""):
+				text = text + " --output=\"" + output + "\""
+			f.write(text + "\n")
+    		subprocess.Popen("chmod 755 runme.sh", stdout=subprocess.PIPE, shell=True)
+		
 # Get options
 if __name__ == "__main__":
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "-h", ["help", "configure", "args=", "output=", "clean"]) 
+		opts, args = getopt.getopt(sys.argv[1:], "-h", ["help", "configure-smm", "args=", "output=", "clean", "configure-cache"]) 
 	except getopt.GetoptError as err:
 		print str(err)
 		sys.exit(2)
 	arguments = ""
 	output = ""
-	createConfigurations = 0
+	config = 0
 	for opt, arg in opts:
 		if opt in ("-h", "--help"):
-			print 'smm --configure --args --output --clean'
+			print 'smm --configure-smm --configure-cache --args --output --clean'
 			sys.exit()
-		elif opt in ("--configure"):
-			createConfigurations = 1
+		elif opt in ("--configure-smm"):
+			config = 1
+		elif opt in ("--configure-cache"):
+			config = 2
 		elif opt in ("--args"):
 			arguments = arg
 		elif opt in ("--output"):
@@ -140,6 +211,12 @@ if __name__ == "__main__":
     				subprocess.Popen("rm runme.sh", stdout=subprocess.PIPE, shell=True)
 		else:
 			assert False, "unhandled option"
-	if createConfigurations:
-		create_makefile()
-		create_runme(arguments, output)
+	if config == 1:
+		create_smm_makefile()
+		create_smm_runme(arguments, output)
+	if config == 2:
+		create_cache_makefile()
+		create_cache_runme(arguments, output)
+		
+	    
+	  	
