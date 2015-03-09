@@ -1,0 +1,1 @@
+smmstack --clean; smmstack --configure-cache --args small.udp --output output_small.txt

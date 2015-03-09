@@ -1,0 +1,1 @@
+smmstack --clean; smmstack --configure-cache --args "4 32" --output=output.txt
