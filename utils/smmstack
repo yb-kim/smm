@@ -44,7 +44,7 @@ stack_manager.bc:$(SMMDIR)/stack_manager.c
 	$(CC) -emit-llvm -c $(CFLAGS) $< -o $@
 
 clean:
-	-rm -rf  $(PROGRAM) opt_$(PROGRAM) *s. *.o *.bc *.ll *_ll.cpp *.dis *.txt m5out	
+	-rm -rf  $(PROGRAM) opt_$(PROGRAM) *s. *.o *.bc *.ll *_ll.cpp *.dis *.txt 
     """
 
 	# Create the linker script for SPM setup
@@ -141,7 +141,7 @@ $(PROGRAM): $(OBJECTS)
 	$(CC) -emit-llvm -c $(CFLAGS) $< -o $@
 
 clean:
-	-rm -rf  $(PROGRAM) *s. *.o *.bc *.ll *_ll.cpp *.dis *.txt m5out	
+	-rm -rf  $(PROGRAM) *s. *.o *.bc *.ll *_ll.cpp *.dis *.txt 
     """
 	# Create the makefile using the created linker script
 	if (not os.path.isfile("Makefile")): 
@@ -209,6 +209,8 @@ if __name__ == "__main__":
     				subprocess.Popen("rm Makefile", stdout=subprocess.PIPE, shell=True)
 			if (os.path.isfile("runme.sh")):
     				subprocess.Popen("rm runme.sh", stdout=subprocess.PIPE, shell=True)
+			if (os.path.isdir("m5out")):
+    				subprocess.Popen("rm -r m5out", stdout=subprocess.PIPE, shell=True)
 		else:
 			assert False, "unhandled option"
 	if config == 1:
