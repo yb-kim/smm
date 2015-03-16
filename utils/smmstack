@@ -28,23 +28,24 @@ all: $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
 	llvm-link -o $@.bc $(OBJECTS)
-	$(CC) -o $@ $@.bc $(LDFLAGS)
 	llvm-dis < $@.bc > $@.ll
 	#llc -march=cpp $@.ll -o $@_ll.cpp
+	$(CC) -o $@ $@.bc $(LDFLAGS)
 	objdump -d $@ > $@.dis
-	opt -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smmstack < $@.bc > opt_$@.bc
-	$(CC) opt_$@.bc -o opt_$@ $(LDFLAGS) 
-	llvm-dis < opt_$@.bc > opt_$@.ll
-	objdump -d opt_$@ > opt_$@.dis
 
 stack_manager.bc:$(SMMDIR)/stack_manager.c
 	$(CC) -emit-llvm -c $(CFLAGS) $< -o $@
 
 %.bc: %${sourceFileExtension}
 	$(CC) -emit-llvm -c $(CFLAGS) $< -o $@
+opt:
+	opt -O3 -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smmstack < $(PROGRAM).bc > opt_$(PROGRAM).bc
+	llvm-dis < opt_$(PROGRAM).bc > opt_$(PROGRAM).ll
+	$(CC) opt_$(PROGRAM).bc -o opt_$(PROGRAM) $(LDFLAGS) 
+	objdump -d opt_$(PROGRAM) > opt_$(PROGRAM).dis
 
 clean:
-	-rm -rf  $(PROGRAM) opt_$(PROGRAM) *s. *.o *.bc *.ll *_ll.cpp *.dis *.txt 
+	-rm -rf  $(PROGRAM) opt_$(PROGRAM) *s. *.o *.bc *.ll *.dis *.txt 
     """
 
 	# Create the linker script for SPM setup
@@ -92,6 +93,7 @@ clean:
 			makefile = makefile.replace("${sourceFileExtension}", sourceFileExtension)
 			f.write(makefile)
 
+
 # Create runme file for a SMM architecture
 def create_smm_runme(arguments="", output=""):
 	binary = os.path.basename(os.getcwd())
@@ -111,7 +113,6 @@ def create_smm_runme(arguments="", output=""):
     		subprocess.Popen("chmod 755 runme.sh", stdout=subprocess.PIPE, shell=True)
 		
 
-
 # Create a makefile for a cache-based architecture
 def create_cache_makefile():
 	#  Makefile
@@ -125,23 +126,23 @@ LIBS = -lm
 
 OBJECTS = ${objectsUnfold}
 CC=clang
-CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -O0
+CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -O3
 LDFLAGS = $(LIBDIRS) $(LIBS) -static 
 
 all: $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
 	llvm-link -o $@.bc $(OBJECTS)
-	$(CC) -o $@ $@.bc $(LDFLAGS)
 	llvm-dis < $@.bc > $@.ll
 	#llc -march=cpp $@.ll -o $@_ll.cpp
+	$(CC) -o $@ $@.bc $(LDFLAGS)
 	objdump -d $@ > $@.dis
 
 %.bc: %${sourceFileExtension}
 	$(CC) -emit-llvm -c $(CFLAGS) $< -o $@
 
 clean:
-	-rm -rf  $(PROGRAM) *s. *.o *.bc *.ll *_ll.cpp *.dis *.txt 
+	-rm -rf  $(PROGRAM) *s. *.o *.bc *.ll *.dis *.txt 
     """
 	# Create the makefile using the created linker script
 	if (not os.path.isfile("Makefile")): 
@@ -167,6 +168,7 @@ clean:
 			makefile = makefile.replace("${sourceFileExtension}", sourceFileExtension)
 			f.write(makefile)
 
+
 def create_cache_runme(arguments="", output=""):
 	binary = os.path.basename(os.getcwd())
 	# Create a runme script
@@ -180,6 +182,7 @@ def create_cache_runme(arguments="", output=""):
 			f.write(text + "\n")
     		subprocess.Popen("chmod 755 runme.sh", stdout=subprocess.PIPE, shell=True)
 		
+
 # Get options
 if __name__ == "__main__":
 	try:
