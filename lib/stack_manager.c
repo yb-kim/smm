@@ -8,11 +8,14 @@ char *_spm_stack_base, *_mem_stack_base;
 long long int _stack_depth = 0;
 STACK_ENTRY _stack[20];
 
+// Pointer management
+static char *sp, *gaddr, *laddr;
+
 // evict oldest stack frames to make space for callee
 void _sstore() {
 	// move caller stack frame from SPM to memory
 	getSP(_stack[_stack_depth].spm_addr); // read current value of stack pointer
-	_stack[_stack_depth].spm_addr += 0x10; // offset the displacement of stack pointer caused by _sstore function
+	//_stack[_stack_depth].spm_addr += 0x10; // offset the displacement of stack pointer caused by _sstore function (not needed if compilers inline this function)
 	_stack[_stack_depth].ssize = _spm_stack_base - _stack[_stack_depth].spm_addr; // calculate the size of the caller stack frame
 	if (_stack_depth == 0) { // call stack is empty
 		//_stack[_stack_depth].ssize = _spm_stack_base - _stack[_stack_depth].spm_addr; // calculate the size of the caller stack frame
@@ -41,11 +44,10 @@ void _sload() {
 // pointer threats resolution
 char * _l2g(char *laddr)
 {
-	char *sp, *gaddr;
 	// do address translation only if the address passed in is in the current stack frame
 	gaddr = laddr; // set return value to the passed in address by default
 	getSP(sp); // get current value of stack pointer
-	sp += 0x10; // offset the displacement of stack pointer caused by _l2g function
+	//sp += 0x10; // offset the displacement of stack pointer caused by _l2g function (not needed if compilers inline this function)
 	// calculate the offset from the beginning of the current stack frame to the address
 	if (_stack_depth == 0) {
 		if (laddr >= sp && laddr < _spm_stack_base) {
@@ -61,11 +63,10 @@ char * _l2g(char *laddr)
 
 char * _g2l(char *gaddr)
 {
-	char *sp, *laddr;
 	// do address translation only if the address passed in is in the current stack frame
 	laddr = gaddr; // set return value to the passed in address by default
 	getSP(sp); // get current value of stack pointer
-	sp += 0x10; // offset the displacement of stack pointer caused by _g2l function
+	//sp += 0x10; // offset the displacement of stack pointer caused by _g2l function (not needed if compilers inline this function)
 	if (_stack_depth == 0) {
 		if (gaddr >= _mem_stack_base - (_spm_stack_base - sp) && gaddr < _mem_stack_base) {
 			laddr = _spm_stack_base - (_mem_stack_base - gaddr);

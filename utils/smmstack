@@ -21,8 +21,8 @@ LIBS = -lm
 
 OBJECTS = stack_manager.bc ${objectsUnfold}
 CC=clang
-CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -O0
-LDFLAGS = $(LIBDIRS) $(LIBS) -static -Wl,-T,spm.ld
+CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3
+LDFLAGS = $(LIBDIRS) $(LIBS) -static -Wl,-T,spm.ld -O3
 
 all: $(PROGRAM)
 
@@ -34,10 +34,10 @@ $(PROGRAM): $(OBJECTS)
 	objdump -d $@ > $@.dis
 
 stack_manager.bc:$(SMMDIR)/stack_manager.c
-	$(CC) -emit-llvm -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 %.bc: %${sourceFileExtension}
-	$(CC) -emit-llvm -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 opt:
 	opt -O3 -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smmstack < $(PROGRAM).bc > opt_$(PROGRAM).bc
 	llvm-dis < opt_$(PROGRAM).bc > opt_$(PROGRAM).ll
@@ -98,8 +98,8 @@ clean:
 def create_smm_runme(arguments="", output=""):
 	binary = os.path.basename(os.getcwd())
 	# Create a runme file 
-	if (not os.path.isfile("runme.sh")):
-		with open("runme.sh", "w") as f:
+	if (not os.path.isfile("runme")):
+		with open("runme", "w") as f:
 			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + binary
 			opt_text = "$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
 			if (arguments != ""):
@@ -110,7 +110,7 @@ def create_smm_runme(arguments="", output=""):
 				opt_text = opt_text + " --output=\"opt_" + output + "\""
 			f.write(text + "\n")
 			f.write(opt_text + "\n")
-    		subprocess.Popen("chmod 755 runme.sh", stdout=subprocess.PIPE, shell=True)
+    		subprocess.Popen("chmod 755 runme", stdout=subprocess.PIPE, shell=True)
 		
 
 # Create a makefile for a cache-based architecture
@@ -126,8 +126,8 @@ LIBS = -lm
 
 OBJECTS = ${objectsUnfold}
 CC=clang
-CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -O3
-LDFLAGS = $(LIBDIRS) $(LIBS) -static 
+CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3
+LDFLAGS = $(LIBDIRS) $(LIBS) -static -O3
 
 all: $(PROGRAM)
 
@@ -139,7 +139,7 @@ $(PROGRAM): $(OBJECTS)
 	objdump -d $@ > $@.dis
 
 %.bc: %${sourceFileExtension}
-	$(CC) -emit-llvm -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 clean:
 	-rm -rf  $(PROGRAM) *s. *.o *.bc *.ll *.dis *.txt 
@@ -172,15 +172,15 @@ clean:
 def create_cache_runme(arguments="", output=""):
 	binary = os.path.basename(os.getcwd())
 	# Create a runme script
-	if (not os.path.isfile("runme.sh")):
-		with open("runme.sh", "w") as f:
+	if (not os.path.isfile("runme")):
+		with open("runme", "w") as f:
 			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_cache_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/cache -r $SIMDIR/configs/example/se.py --cpu-type=atomic --caches -c " + binary
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
 			if (output != ""):
 				text = text + " --output=\"" + output + "\""
 			f.write(text + "\n")
-    		subprocess.Popen("chmod 755 runme.sh", stdout=subprocess.PIPE, shell=True)
+    		subprocess.Popen("chmod 755 runme", stdout=subprocess.PIPE, shell=True)
 		
 
 # Get options
@@ -210,8 +210,8 @@ if __name__ == "__main__":
     				subprocess.Popen("rm spm.ld", stdout=subprocess.PIPE, shell=True)
 			if (os.path.isfile("Makefile")):
     				subprocess.Popen("rm Makefile", stdout=subprocess.PIPE, shell=True)
-			if (os.path.isfile("runme.sh")):
-    				subprocess.Popen("rm runme.sh", stdout=subprocess.PIPE, shell=True)
+			if (os.path.isfile("runme")):
+    				subprocess.Popen("rm runme", stdout=subprocess.PIPE, shell=True)
 			if (os.path.isdir("m5out")):
     				subprocess.Popen("rm -r m5out", stdout=subprocess.PIPE, shell=True)
 		else:
