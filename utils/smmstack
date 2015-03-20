@@ -21,16 +21,17 @@ LIBS = -lm
 
 OBJECTS = stack_manager.bc ${objectsUnfold}
 CC=clang
-CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3
-LDFLAGS = $(LIBDIRS) $(LIBS) -static -Wl,-T,spm.ld -O3
+CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3 -fno-inline
+LDFLAGS = $(LIBDIRS) $(LIBS) -static -Wl,-T,spm.ld
 
 all: $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
-	llvm-link -o $@.bc $(OBJECTS)
+	llvm-link -o temp_$@.bc $(OBJECTS)
+	opt -O3 -disable-inlining < temp_$@.bc > $@.bc
 	llvm-dis < $@.bc > $@.ll
-	#llc -march=cpp $@.ll -o $@_ll.cpp
-	$(CC) -o $@ $@.bc $(LDFLAGS)
+	llc -O3 -o $@.s $@.bc 
+	$(CC) -o $@ $@.s $(LDFLAGS)
 	objdump -d $@ > $@.dis
 
 stack_manager.bc:$(SMMDIR)/stack_manager.c
@@ -38,14 +39,16 @@ stack_manager.bc:$(SMMDIR)/stack_manager.c
 
 %.bc: %${sourceFileExtension}
 	$(CC) $(CFLAGS) $< -o $@
+
 opt:
-	opt -O3 -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smmstack < $(PROGRAM).bc > opt_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smmstack < $(PROGRAM).bc > opt_$(PROGRAM).bc
 	llvm-dis < opt_$(PROGRAM).bc > opt_$(PROGRAM).ll
-	$(CC) opt_$(PROGRAM).bc -o opt_$(PROGRAM) $(LDFLAGS) 
+	llc -O3 -o opt_$(PROGRAM).s opt_$(PROGRAM).bc 
+	$(CC) -o opt_$(PROGRAM) opt_$(PROGRAM).s $(LDFLAGS) 
 	objdump -d opt_$(PROGRAM) > opt_$(PROGRAM).dis
 
 clean:
-	-rm -rf  $(PROGRAM) opt_$(PROGRAM) *s. *.o *.bc *.ll *.dis *.txt 
+	-rm -rf  $(PROGRAM) opt_$(PROGRAM) *.s *.o *.bc *.ll *.dis *.txt 
     """
 
 	# Create the linker script for SPM setup
@@ -101,7 +104,7 @@ def create_smm_runme(arguments="", output=""):
 	if (not os.path.isfile("runme")):
 		with open("runme", "w") as f:
 			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + binary
-			opt_text = "$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
+			opt_text = "$SIMDIR/build/X86/gem5.debug -d m5out/smm --stdout-file=opt-simout -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
 				opt_text = opt_text + " -o \"" + arguments + "\""
@@ -126,23 +129,23 @@ LIBS = -lm
 
 OBJECTS = ${objectsUnfold}
 CC=clang
-CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3
-LDFLAGS = $(LIBDIRS) $(LIBS) -static -O3
+CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3 -fno-inline
+LDFLAGS = $(LIBDIRS) $(LIBS) -static
 
 all: $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
 	llvm-link -o $@.bc $(OBJECTS)
 	llvm-dis < $@.bc > $@.ll
-	#llc -march=cpp $@.ll -o $@_ll.cpp
-	$(CC) -o $@ $@.bc $(LDFLAGS)
+	llc -O3 -o $@.s $@.bc
+	$(CC) -o $@ $@.s $(LDFLAGS)
 	objdump -d $@ > $@.dis
 
 %.bc: %${sourceFileExtension}
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	-rm -rf  $(PROGRAM) *s. *.o *.bc *.ll *.dis *.txt 
+	-rm -rf  $(PROGRAM) *.s *.o *.bc *.ll *.dis *.txt 
     """
 	# Create the makefile using the created linker script
 	if (not os.path.isfile("Makefile")): 
