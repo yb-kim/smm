@@ -8,9 +8,9 @@ enum TRANSDIR {SPM2MEM, MEM2SPM};
 
 #if defined(__i386__)
 
-extern inline int dma(void *, void *, unsigned int, int) __attribute__((always_inline));
+inline int dma(void *, void *, unsigned int, int) __attribute__((always_inline));
 
-extern inline int dma(void *spmAddr, void *memAddr, unsigned int size, int transDir) {
+inline int dma(void *spmAddr, void *memAddr, unsigned int size, int transDir) {
 	int bytes_trans = 0;
 	__asm__ __volatile__("mov %1, %%ebx\n\t"
 			"mov %2, %%ecx\n\t"
@@ -28,11 +28,9 @@ extern inline int dma(void *spmAddr, void *memAddr, unsigned int size, int trans
 
 #elif defined(__x86_64__)
 
-//extern inline int dma(unsigned long, unsigned long, unsigned long, int) __attribute__((always_inline));
-extern inline int dma(void *, void *, unsigned long, int) __attribute__((always_inline));
+inline int dma(void *, void *, unsigned long, int) __attribute__((always_inline));
 
-//extern inline int dma(unsigned long spmAddr, unsigned long memAddr, unsigned long size, int transDir) {
-extern inline int dma(void *spmAddr, void *memAddr, unsigned long size, int transDir) {
+inline int dma(void *spmAddr, void *memAddr, unsigned long size, int transDir) {
 	int bytes_trans;
 	__asm__ __volatile__("mov %1, %%rdi\n\t"
 			"mov %2, %%rsi\n\t"
