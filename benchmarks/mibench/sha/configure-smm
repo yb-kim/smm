@@ -1,0 +1,1 @@
+smmstack --clean; smmstack --configure-smm --args "input_small.asc" --output="output.txt"
