@@ -30,7 +30,7 @@ $(PROGRAM): $(OBJECTS)
 	llvm-link -o temp_$@.bc $(OBJECTS)
 	opt -O3 -disable-inlining < temp_$@.bc > $@.bc
 	llvm-dis < $@.bc > $@.ll
-	llc -O3 -o $@.s $@.bc 
+	llc -O3 -float-abi=soft -o $@.s $@.bc 
 	$(CC) -o $@ $@.s $(LDFLAGS)
 	objdump -d $@ > $@.dis
 
@@ -41,9 +41,9 @@ stack_manager.bc:$(SMMDIR)/stack_manager.c
 	$(CC) $(CFLAGS) $< -o $@
 
 opt:
-	opt -O3 -disable-inlining -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smmstack < $(PROGRAM).bc > opt_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smmstack < temp_$(PROGRAM).bc > opt_$(PROGRAM).bc
 	llvm-dis < opt_$(PROGRAM).bc > opt_$(PROGRAM).ll
-	llc -O3 -o opt_$(PROGRAM).s opt_$(PROGRAM).bc 
+	llc -O3 -float-abi=soft -o opt_$(PROGRAM).s opt_$(PROGRAM).bc 
 	$(CC) -o opt_$(PROGRAM) opt_$(PROGRAM).s $(LDFLAGS) 
 	objdump -d opt_$(PROGRAM) > opt_$(PROGRAM).dis
 
