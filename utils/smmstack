@@ -135,7 +135,8 @@ LDFLAGS = $(LIBDIRS) $(LIBS) -static
 all: $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
-	llvm-link -o $@.bc $(OBJECTS)
+	llvm-link -o temp_$@.bc $(OBJECTS)
+	opt -O3 -disable-inlining < temp_$@.bc > $@.bc
 	llvm-dis < $@.bc > $@.ll
 	llc -O3 -o $@.s $@.bc
 	$(CC) -o $@ $@.s $(LDFLAGS)
