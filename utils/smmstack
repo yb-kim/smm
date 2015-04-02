@@ -104,7 +104,7 @@ def create_smm_runme(arguments="", output=""):
 	if (not os.path.isfile("runme")):
 		with open("runme", "w") as f:
 			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + binary
-			opt_text = "$SIMDIR/build/X86/gem5.debug -d m5out/smm --stdout-file=opt-simout -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
+			opt_text = "$SIMDIR/build/X86/gem5.debug -d m5out/opt-smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
 				opt_text = opt_text + " -o \"" + arguments + "\""

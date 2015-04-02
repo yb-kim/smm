@@ -9,7 +9,7 @@
 typedef unsigned char BYTE;
 typedef unsigned long LONG;
 
-#define SHA_BLOCKSIZE		64
+#define SHA_BLOCKSIZE		128
 #define SHA_DIGESTSIZE		20
 
 typedef struct {

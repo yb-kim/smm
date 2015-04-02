@@ -1,0 +1,2 @@
+#!/bin/sh
+smmstack --clean; smmstack --configure-cache --args 75000 --output=output_small.txt
