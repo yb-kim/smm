@@ -98,7 +98,7 @@ clean:
 
 
 # Create runme file for a SMM architecture
-def create_smm_runme(arguments="", output=""):
+def create_smm_runme(arguments="", infile = "", outfile=""):
 	binary = os.path.basename(os.getcwd())
 	# Create a runme file 
 	if (not os.path.isfile("runme")):
@@ -107,10 +107,15 @@ def create_smm_runme(arguments="", output=""):
 			opt_text = "$SIMDIR/build/X86/gem5.debug -d m5out/opt-smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
+				if outfile == "":
+					arguments = arguments.replace("output", "opt_output", 1)
 				opt_text = opt_text + " -o \"" + arguments + "\""
-			if (output != ""):
-				text = text + " --output=\"" + output + "\""
-				opt_text = opt_text + " --output=\"opt_" + output + "\""
+			if (infile!= ""):
+				text = text + " --input=\"" + infile + "\""
+				opt_text = opt_text + " --input=\"" + infile + "\""
+			if (outfile != ""):
+				text = text + " --output=\"" + outfile + "\""
+				opt_text = opt_text + " --output=\"opt_" + outfile + "\""
 			f.write(text + "\n")
 			f.write(opt_text + "\n")
     		subprocess.Popen("chmod 755 runme", stdout=subprocess.PIPE, shell=True)
@@ -173,7 +178,7 @@ clean:
 			f.write(makefile)
 
 
-def create_cache_runme(arguments="", output=""):
+def create_cache_runme(arguments="", infile="", output=""):
 	binary = os.path.basename(os.getcwd())
 	# Create a runme script
 	if (not os.path.isfile("runme")):
@@ -190,16 +195,17 @@ def create_cache_runme(arguments="", output=""):
 # Get options
 if __name__ == "__main__":
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "-h", ["help", "configure-smm", "args=", "output=", "clean", "configure-cache"]) 
+		opts, args = getopt.getopt(sys.argv[1:], "-h", ["help", "configure-smm", "args=", "input=", "output=", "clean", "configure-cache"]) 
 	except getopt.GetoptError as err:
 		print str(err)
 		sys.exit(2)
 	arguments = ""
-	output = ""
+	infile = ""
+	outfile = ""
 	config = 0
 	for opt, arg in opts:
 		if opt in ("-h", "--help"):
-			print 'smm --configure-smm --configure-cache --args --output --clean'
+			print 'smm --configure-smm --configure-cache --args --input --output --clean'
 			sys.exit()
 		elif opt in ("--configure-smm"):
 			config = 1
@@ -207,8 +213,10 @@ if __name__ == "__main__":
 			config = 2
 		elif opt in ("--args"):
 			arguments = arg
+		elif opt in ("--input"):
+			infile = arg
 		elif opt in ("--output"):
-			output = arg
+			outfile = arg
 		elif opt in ("--clean"):
 			if (os.path.isfile("spm.ld")):
     				subprocess.Popen("rm spm.ld", stdout=subprocess.PIPE, shell=True)
@@ -222,10 +230,10 @@ if __name__ == "__main__":
 			assert False, "unhandled option"
 	if config == 1:
 		create_smm_makefile()
-		create_smm_runme(arguments, output)
+		create_smm_runme(arguments, infile, outfile)
 	if config == 2:
 		create_cache_makefile()
-		create_cache_runme(arguments, output)
+		create_cache_runme(arguments, infile, outfile)
 		
 	    
 	  	
