@@ -19,7 +19,7 @@ INCLUDE=-include stack_manager.h
 LIBDIRS=
 LIBS = -lm
 
-OBJECTS = stack_manager.bc ${objectsUnfold}
+OBJECTS = ${objectsUnfold}
 CC=clang
 CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3 -fno-inline
 LDFLAGS = $(LIBDIRS) $(LIBS) -static -Wl,-T,spm.ld
@@ -27,8 +27,8 @@ LDFLAGS = $(LIBDIRS) $(LIBS) -static -Wl,-T,spm.ld
 all: $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
-	llvm-link -o temp_$@.bc $(OBJECTS)
-	opt -O3 -disable-inlining < temp_$@.bc > $@.bc
+	llvm-link -o basic_$@.bc $(OBJECTS)
+	opt -O3 -disable-inlining < basic_$@.bc > $@.bc
 	llvm-dis < $@.bc > $@.ll
 	llc -O3 -o $@.s $@.bc 
 	$(CC) -o $@ $@.s $(LDFLAGS)
@@ -40,15 +40,21 @@ stack_manager.bc:$(SMMDIR)/stack_manager.c
 %.bc: %${sourceFileExtension}
 	$(CC) $(CFLAGS) $< -o $@
 
-opt:
-	opt -O3 -disable-inlining -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smmstack < temp_$(PROGRAM).bc > opt_$(PROGRAM).bc
+opt: stack_manager.bc $(OBJECTS)
+	llvm-link -o opt_basic_$(PROGRAM).bc stack_manager.bc $(OBJECTS)
+	opt -O3 -disable-inlining -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smmstack < opt_basic_$(PROGRAM).bc > opt_$(PROGRAM).bc
 	llvm-dis < opt_$(PROGRAM).bc > opt_$(PROGRAM).ll
 	llc -O3 -o opt_$(PROGRAM).s opt_$(PROGRAM).bc 
 	$(CC) -o opt_$(PROGRAM) opt_$(PROGRAM).s $(LDFLAGS) 
 	objdump -d opt_$(PROGRAM) > opt_$(PROGRAM).dis
 
+prof:
+	opt -O3 -disable-inlining -dot-callgraph < basic_$(PROGRAM).bc
+	dot -Tps callgraph.dot -o basic_$(PROGRAM).ps
+    	
+
 clean:
-	-rm -rf  $(PROGRAM) opt_$(PROGRAM) *.s *.o *.bc *.ll *.dis *.txt 
+	-rm -rf  $(PROGRAM) opt_$(PROGRAM) *.s *.o *.bc *.ll *.dis *.txt *.dot *.ps
     """
 
 	# Create the linker script for SPM setup
@@ -140,8 +146,8 @@ LDFLAGS = $(LIBDIRS) $(LIBS) -static
 all: $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
-	llvm-link -o temp_$@.bc $(OBJECTS)
-	opt -O3 -disable-inlining < temp_$@.bc > $@.bc
+	llvm-link -o basic_$@.bc $(OBJECTS)
+	opt -O3 -disable-inlining < basic_$@.bc > $@.bc
 	llvm-dis < $@.bc > $@.ll
 	llc -O3 -o $@.s $@.bc
 	$(CC) -o $@ $@.s $(LDFLAGS)
