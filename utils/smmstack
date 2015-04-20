@@ -10,19 +10,21 @@ import sys
 def create_smm_makefile():
 	#  make file
 	makefile = """
-PROGRAM = ${binary}
+PROGRAM = ${program}
 
 SMMDIR=/home/jcai/Documents/smmstack/lib
 
-INCLUDEDIRS=-I$(SMMDIR)
-INCLUDE=-include stack_manager.h
+INCLUDEDIRS=
+INCLUDE=
 LIBDIRS=
 LIBS = -lm
 
-OBJECTS = ${objectsUnfold}
+OBJECTS = ${original_objects}
+OPT_OBJECTS = stack_manager.bc ${opt_objects}
+PROF_OBJECTS = stack_management_helper.bc ${prof_objects}
 CC=clang
 CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3 -fno-inline
-LDFLAGS = $(LIBDIRS) $(LIBS) -static -Wl,-T,spm.ld
+LDFLAGS = $(LIBDIRS) $(LIBS) -static
 
 all: $(PROGRAM)
 
@@ -34,27 +36,44 @@ $(PROGRAM): $(OBJECTS)
 	$(CC) -o $@ $@.s $(LDFLAGS)
 	objdump -d $@ > $@.dis
 
-stack_manager.bc:$(SMMDIR)/stack_manager.c
+
+%.bc: %${source_file_extension}
 	$(CC) $(CFLAGS) $< -o $@
 
-%.bc: %${sourceFileExtension}
-	$(CC) $(CFLAGS) $< -o $@
-
-opt: stack_manager.bc $(OBJECTS)
-	llvm-link -o opt_basic_$(PROGRAM).bc stack_manager.bc $(OBJECTS)
-	opt -O3 -disable-inlining -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMSmmStack.so -smmstack < opt_basic_$(PROGRAM).bc > opt_$(PROGRAM).bc
+opt: $(OPT_OBJECTS)
+	llvm-link -o opt_basic_$(PROGRAM).bc $(OPT_OBJECTS)
+	opt -O3 -disable-inlining -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMStackManagement.so -smmsm < opt_basic_$(PROGRAM).bc > opt_$(PROGRAM).bc
 	llvm-dis < opt_$(PROGRAM).bc > opt_$(PROGRAM).ll
 	llc -O3 -o opt_$(PROGRAM).s opt_$(PROGRAM).bc 
-	$(CC) -o opt_$(PROGRAM) opt_$(PROGRAM).s $(LDFLAGS) 
+	$(CC) -o opt_$(PROGRAM) opt_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
 	objdump -d opt_$(PROGRAM) > opt_$(PROGRAM).dis
 
-prof:
+stack_manager.bc:$(SMMDIR)/stack_manager.c
+	$(CC) -I$(SMMDIR) -include stack_manager.h $(CFLAGS) $< -o $@
+
+opt_%.bc: %${source_file_extension}
+	$(CC) -I$(SMMDIR) -include stack_manager.h  $(CFLAGS) $< -o $@
+
+prof: $(PROF_OBJECTS)
+	llvm-link -o prof_basic_$(PROGRAM).bc $(PROF_OBJECTS)
+	opt -O3 -disable-inlining -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMStackManagementHelper.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
+	llvm-dis < prof_$(PROGRAM).bc > prof_$(PROGRAM).ll
+	llc -O3 -o prof_$(PROGRAM).s prof_$(PROGRAM).bc 
+	$(CC) -o prof_$(PROGRAM) prof_$(PROGRAM).s $(LDFLAGS)
+	objdump -d prof_$(PROGRAM) > prof_$(PROGRAM).dis
+    	
+stack_management_helper.bc:$(SMMDIR)/stack_management_helper.c
+	$(CC) -I$(SMMDIR) -include stack_management_helper.h $(CFLAGS) $< -o $@
+
+prof_%.bc: %${source_file_extension}
+	$(CC) -I$(SMMDIR) -include stack_management_helper.h $(CFLAGS) $< -o $@
+
+callgraph:
 	opt -O3 -disable-inlining -dot-callgraph < basic_$(PROGRAM).bc
 	dot -Tps callgraph.dot -o basic_$(PROGRAM).ps
-    	
 
 clean:
-	-rm -rf  $(PROGRAM) opt_$(PROGRAM) *.s *.o *.bc *.ll *.dis *.txt *.dot *.ps
+	-rm -rf  $(PROGRAM) opt_$(PROGRAM) prof_$(PROGRAM) *.s *.o *.bc *.ll *.dis *.txt *.dot *.ps *.adpcm
     """
 
 	# Create the linker script for SPM setup
@@ -83,34 +102,40 @@ clean:
 		cwd = os.getcwd()
 		files = os.listdir(cwd)
 		objects = []
-		sourceFileExtension = ""
+		source_file_extension = ""
 		for i in range(len(files)):
 			(file, extension) = os.path.splitext(files[i])
 			if(extension == ".c" or extension == ".cpp" or extension == ".cc"):
 				objects.append(file)
-				if sourceFileExtension == "":
-					sourceFileExtension = extension
+				if source_file_extension == "":
+					source_file_extension = extension
 		objects = list(set(objects))
-		objectsUnfold = ""
+		original_objects = ""
+		opt_objects = ""
+		prof_objects = ""
 	   	for i in range(len(objects)):
-			objectsUnfold = objectsUnfold + " " + objects[i] + ".bc"
-		# Use the name of current folder as the name of generated binary file
-		binary = os.path.basename(cwd)
+			original_objects = original_objects + objects[i] + ".bc" + " "
+			opt_objects = opt_objects + "opt_" + objects[i] + ".bc" + " "
+			prof_objects = prof_objects + "prof_" + objects[i] + ".bc" + " "
+		# Use the name of current folder as the name of generated executable file
+		program = os.path.basename(cwd)
 		with open('Makefile', 'w') as f:
-			makefile = makefile.replace("${objectsUnfold}", objectsUnfold)
-			makefile = makefile.replace("${binary}", binary)
-			makefile = makefile.replace("${sourceFileExtension}", sourceFileExtension)
+			makefile = makefile.replace("${original_objects}", original_objects)
+			makefile = makefile.replace("${opt_objects}", opt_objects)
+			makefile = makefile.replace("${prof_objects}", prof_objects)
+			makefile = makefile.replace("${program}", program)
+			makefile = makefile.replace("${source_file_extension}", source_file_extension)
 			f.write(makefile)
 
 
 # Create runme file for a SMM architecture
 def create_smm_runme(arguments="", infile = "", outfile=""):
-	binary = os.path.basename(os.getcwd())
+	program = os.path.basename(os.getcwd())
 	# Create a runme file 
 	if (not os.path.isfile("runme")):
 		with open("runme", "w") as f:
-			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + binary
-			opt_text = "$SIMDIR/build/X86/gem5.debug -d m5out/opt-smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + binary
+			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + program
+			opt_text = "$SIMDIR/build/X86/gem5.debug -d m5out/opt-smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + program
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
 				if outfile == "":
@@ -131,14 +156,14 @@ def create_smm_runme(arguments="", infile = "", outfile=""):
 def create_cache_makefile():
 	#  Makefile
 	makefile = """
-PROGRAM = ${binary}
+PROGRAM = ${program}
 
 INCLUDEDIRS=
 INCLUDE=
 LIBDIRS=
 LIBS = -lm
 
-OBJECTS = ${objectsUnfold}
+OBJECTS = ${original_objects}
 CC=clang
 CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3 -fno-inline
 LDFLAGS = $(LIBDIRS) $(LIBS) -static
@@ -153,43 +178,43 @@ $(PROGRAM): $(OBJECTS)
 	$(CC) -o $@ $@.s $(LDFLAGS)
 	objdump -d $@ > $@.dis
 
-%.bc: %${sourceFileExtension}
+%.bc: %${source_file_extension}
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	-rm -rf  $(PROGRAM) *.s *.o *.bc *.ll *.dis *.txt 
+	-rm -rf  $(PROGRAM) *.s *.o *.bc *.ll *.dis *.txt *.dot *.ps *.adpcm
     """
 	# Create the makefile using the created linker script
 	if (not os.path.isfile("Makefile")): 
 		cwd = os.getcwd()
 		files = os.listdir(cwd)
 		objects = []
-		sourceFileExtension = ""
+		source_file_extension = ""
 		for i in range(len(files)):
 			(file, extension) = os.path.splitext(files[i])
 			if(extension == ".c" or extension == ".cpp" or extension == ".cc"):
 				objects.append(file)
-				if sourceFileExtension == "":
-					sourceFileExtension = extension
+				if source_file_extension == "":
+					source_file_extension = extension
 		objects = list(set(objects))
-		objectsUnfold = ""
+		original_objects = ""
 	   	for i in range(len(objects)):
-			objectsUnfold = objectsUnfold + " " + objects[i] + ".bc"
-		# Use the name of current folder as the name of generated binary file
-		binary = os.path.basename(cwd)
+			original_objects = original_objects + " " + objects[i] + ".bc"
+		# Use the name of current folder as the name of generated executable file
+		program = os.path.basename(cwd)
 		with open('Makefile', 'w') as f:
-			makefile = makefile.replace("${objectsUnfold}", objectsUnfold)
-			makefile = makefile.replace("${binary}", binary)
-			makefile = makefile.replace("${sourceFileExtension}", sourceFileExtension)
+			makefile = makefile.replace("${original_objects}", original_objects)
+			makefile = makefile.replace("${program}", program)
+			makefile = makefile.replace("${source_file_extension}", source_file_extension)
 			f.write(makefile)
 
 
 def create_cache_runme(arguments="", infile="", output=""):
-	binary = os.path.basename(os.getcwd())
+	program = os.path.basename(os.getcwd())
 	# Create a runme script
 	if (not os.path.isfile("runme")):
 		with open("runme", "w") as f:
-			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_cache_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/cache -r $SIMDIR/configs/example/se.py --cpu-type=atomic --caches -c " + binary
+			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_cache_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/cache -r $SIMDIR/configs/example/se.py --cpu-type=atomic --caches -c " + program
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
 			if (output != ""):
