@@ -1,5 +1,5 @@
-#ifndef __STACK_H__
-#define __STACK_H__
+#ifndef __STACK_MANAGER_H__
+#define __STACK_MANAGER_H__
 
 #define getSP(sp) { __asm __volatile("mov %%rsp, %0;\n":"=m"(sp));}
 #define putSP(sp) { __asm __volatile("mov %0, %%rsp;\n"::"m"(sp):"%rsp");}
