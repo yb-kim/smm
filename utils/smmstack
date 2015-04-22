@@ -140,7 +140,7 @@ def create_smm_runme(arguments="", infile = "", outfile=""):
 	# Create a runme file 
 	if (not os.path.isfile("runme")):
 		with open("runme", "w") as f:
-			text = "#!/bin/sh\nSIMDIR=$(HOME)/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + program
+			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + program
 			opt_text = "$SIMDIR/build/X86/gem5.debug -d m5out/opt-smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + program
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
@@ -220,7 +220,7 @@ def create_cache_runme(arguments="", infile="", output=""):
 	# Create a runme script
 	if (not os.path.isfile("runme")):
 		with open("runme", "w") as f:
-			text = "#!/bin/sh\nSIMDIR=$(HOME)/Applications/smm_cache_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/cache -r $SIMDIR/configs/example/se.py --cpu-type=atomic --caches -c " + program
+			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_cache_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/cache -r $SIMDIR/configs/example/se.py --cpu-type=atomic --caches -c " + program
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
 			if (output != ""):
