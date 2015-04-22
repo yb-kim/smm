@@ -12,7 +12,7 @@ def create_smm_makefile(arguments="", infile = ""):
 	makefile = """
 PROGRAM = ${program}
 
-SMMDIR=/home/jcai/Documents/smmstack/lib
+SMMDIR=$(HOME)/Documents/smmstack/lib
 
 INCLUDEDIRS=
 INCLUDE=
@@ -42,7 +42,7 @@ $(PROGRAM): $(OBJECTS)
 
 opt: $(OPT_OBJECTS)
 	llvm-link -o opt_basic_$(PROGRAM).bc $(OPT_OBJECTS)
-	opt -O3 -disable-inlining -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMStackManagement.so -smmsm < opt_basic_$(PROGRAM).bc > opt_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMStackManagement.so -smmsm < opt_basic_$(PROGRAM).bc > opt_$(PROGRAM).bc
 	llvm-dis < opt_$(PROGRAM).bc > opt_$(PROGRAM).ll
 	llc -O3 -o opt_$(PROGRAM).s opt_$(PROGRAM).bc 
 	$(CC) -o opt_$(PROGRAM) opt_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
@@ -56,12 +56,12 @@ opt_%.bc: %${source_file_extension}
 
 prof: $(PROF_OBJECTS)
 	llvm-link -o prof_basic_$(PROGRAM).bc $(PROF_OBJECTS)
-	opt -O3 -disable-inlining -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMStackManagementHelper.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMStackManagementHelper.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
 	llvm-dis < prof_$(PROGRAM).bc > prof_$(PROGRAM).ll
 	llc -O3 -o prof_$(PROGRAM).s prof_$(PROGRAM).bc 
 	$(CC) -o prof_$(PROGRAM) prof_$(PROGRAM).s $(LDFLAGS)
 	./prof_$(PROGRAM) ${arguments} ${infile} > /dev/null
-	opt -O3 -disable-inlining -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMStackManagementHelper.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMStackManagementHelper.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
     	
 stack_management_helper.bc:$(SMMDIR)/stack_management_helper.c
 	$(CC) -I$(SMMDIR) -include stack_management_helper.h $(CFLAGS) $< -o $@
@@ -140,7 +140,7 @@ def create_smm_runme(arguments="", infile = "", outfile=""):
 	# Create a runme file 
 	if (not os.path.isfile("runme")):
 		with open("runme", "w") as f:
-			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + program
+			text = "#!/bin/sh\nSIMDIR=$(HOME)/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + program
 			opt_text = "$SIMDIR/build/X86/gem5.debug -d m5out/opt-smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + program
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
@@ -220,7 +220,7 @@ def create_cache_runme(arguments="", infile="", output=""):
 	# Create a runme script
 	if (not os.path.isfile("runme")):
 		with open("runme", "w") as f:
-			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_cache_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/cache -r $SIMDIR/configs/example/se.py --cpu-type=atomic --caches -c " + program
+			text = "#!/bin/sh\nSIMDIR=$(HOME)/Applications/smm_cache_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/cache -r $SIMDIR/configs/example/se.py --cpu-type=atomic --caches -c " + program
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
 			if (output != ""):
