@@ -7,7 +7,7 @@ import sys
 
 
 # Create a makefile for a SMM architecture
-def create_smm_makefile():
+def create_smm_makefile(arguments="", infile = ""):
 	#  make file
 	makefile = """
 PROGRAM = ${program}
@@ -60,7 +60,8 @@ prof: $(PROF_OBJECTS)
 	llvm-dis < prof_$(PROGRAM).bc > prof_$(PROGRAM).ll
 	llc -O3 -o prof_$(PROGRAM).s prof_$(PROGRAM).bc 
 	$(CC) -o prof_$(PROGRAM) prof_$(PROGRAM).s $(LDFLAGS)
-	objdump -d prof_$(PROGRAM) > prof_$(PROGRAM).dis
+	./prof_$(PROGRAM) ${arguments} ${infile} > /dev/null
+	opt -O3 -disable-inlining -load /home/jcai/Applications/llvm/build/Debug+Asserts/lib/LLVMStackManagementHelper.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
     	
 stack_management_helper.bc:$(SMMDIR)/stack_management_helper.c
 	$(CC) -I$(SMMDIR) -include stack_management_helper.h $(CFLAGS) $< -o $@
@@ -125,6 +126,11 @@ clean:
 			makefile = makefile.replace("${prof_objects}", prof_objects)
 			makefile = makefile.replace("${program}", program)
 			makefile = makefile.replace("${source_file_extension}", source_file_extension)
+			makefile = makefile.replace("${arguments}", arguments)
+			if (infile != ""):
+				makefile = makefile.replace("${infile}", "< " + infile)
+			else:
+				makefile = makefile.replace("${infile}", "")
 			f.write(makefile)
 
 
@@ -260,7 +266,7 @@ if __name__ == "__main__":
 		else:
 			assert False, "unhandled option"
 	if config == 1:
-		create_smm_makefile()
+		create_smm_makefile(arguments, infile)
 		create_smm_runme(arguments, infile, outfile)
 	if config == 2:
 		create_cache_makefile()
