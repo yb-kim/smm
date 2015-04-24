@@ -170,7 +170,8 @@ int main(int argc, char *argv[]) {
 		j=j%NUM_NODES;
 		dijkstra(i,j);
 	}
-	exit(0);
+	//exit(0);
+	return 0;
 
 
 }

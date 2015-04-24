@@ -54,8 +54,7 @@ struct MyNode {
 	double bar;
 };
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	struct ptree *phead;
 	struct ptree *p,*pfind;
@@ -195,5 +194,6 @@ main(int argc, char **argv)
 		}
 	}
 
-	exit(1);
+	//exit(1);
+	return 1;
 }

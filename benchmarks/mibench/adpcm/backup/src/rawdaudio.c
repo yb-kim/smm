@@ -27,5 +27,6 @@ int main() {
     }
     fprintf(stderr, "Final valprev=%d, index=%d\n",
 	    state.valprev, state.index);
-    exit(0);
+    //exit(0);
+    return 0;
 }
