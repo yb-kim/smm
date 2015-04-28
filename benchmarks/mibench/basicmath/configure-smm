@@ -1,1 +1,0 @@
-smmstack --clean; smmstack --configure-smm --output "output.txt"

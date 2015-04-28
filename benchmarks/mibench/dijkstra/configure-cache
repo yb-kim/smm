@@ -1,1 +1,2 @@
+#!/bin/sh
 smmstack --clean; smmstack --configure-cache --args "input.dat" --output="output.txt"
