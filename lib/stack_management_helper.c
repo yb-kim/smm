@@ -10,7 +10,7 @@ long _num_funcs = 0;
 STACK_SIZE _func_stack_size[50];
 
 // get size of stack for the function specified by func_name 
-void _get_stack_size() {
+void _get_func_stack_size() {
     // read current value of stack pointer
     getSP(_sp_called); 
     // offset the displacement of stack pointer caused by current function (not needed if compilers inline this function)
@@ -32,11 +32,12 @@ void _get_stack_size() {
     }
 }
 
-void _dump_stack_size() {
+void _dump_func_stack_sizes() {
     FILE *fp;
-    fp = fopen("user_defined_stack_size.txt", "w");
+    //printf("Dumping ...\n");
+    fp = fopen("wcg_nodes.txt", "w");
     for (long i = 0; i < _num_funcs; i++) {
-	fprintf(fp, "%s %d\n", _func_stack_size[i].func_name, _func_stack_size[i].ssize);
+	fprintf(fp, "%s %ld\n", _func_stack_size[i].func_name, _func_stack_size[i].ssize);
     }
     fclose(fp);
 }
