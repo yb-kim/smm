@@ -56,12 +56,12 @@ opt_%.bc: %${source_file_extension}
 
 prof: $(PROF_OBJECTS)
 	llvm-link -o prof_basic_$(PROGRAM).bc $(PROF_OBJECTS)
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMStackManagementHelper.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSmartStackManagement.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
 	llvm-dis < prof_$(PROGRAM).bc > prof_$(PROGRAM).ll
 	llc -O3 -o prof_$(PROGRAM).s prof_$(PROGRAM).bc 
 	$(CC) -o prof_$(PROGRAM) prof_$(PROGRAM).s $(LDFLAGS)
 	./prof_$(PROGRAM) ${arguments} ${infile} > /dev/null
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMStackManagementHelper.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSmartStackManagement.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
 	ssdm-cuts wcg_paths.txt 256 > wcg_cuts.txt
     	
 stack_management_helper.bc:$(SMMDIR)/stack_management_helper.c
