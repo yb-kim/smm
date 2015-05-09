@@ -7,7 +7,7 @@ import sys
 
 
 # Create a makefile for a SMM architecture
-def create_smm_makefile(arguments="", infile = ""):
+def create_smm_makefile(arguments="", infile = "", outfile=""):
 	#  make file
 	makefile = """
 PROGRAM = ${program}
@@ -75,7 +75,7 @@ callgraph:
 	dot -Tps callgraph.dot -o basic_$(PROGRAM).ps
 
 clean:
-	-rm -rf  $(PROGRAM) opt_$(PROGRAM) prof_$(PROGRAM) *.s *.o *.bc *.ll *.dis *.txt *.dot *.ps *.adpcm
+	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.ps ${outfile} opt_$(PROGRAM) prof_$(PROGRAM) wcg_nodes.txt wcg_paths.txt wcg_cuts.txt
     """
 
 	# Create the linker script for SPM setup
@@ -132,6 +132,8 @@ clean:
 				makefile = makefile.replace("${infile}", "< " + infile)
 			else:
 				makefile = makefile.replace("${infile}", "")
+			if (outfile != ""):
+				makefile = makefile.replace("${outfile}", outfile + " opt_" +outfile)
 			f.write(makefile)
 
 
@@ -146,6 +148,10 @@ def create_smm_runme(arguments="", infile = "", outfile=""):
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
 				if outfile == "":
+#					argument_list = arguments.split()
+#					for arg in argument_list:
+#					    if "output" in arg:
+#					    	arg.replace("output", "opt_output", 1)
 					arguments = arguments.replace("output", "opt_output", 1)
 				opt_text = opt_text + " -o \"" + arguments + "\""
 			if (infile!= ""):
@@ -160,7 +166,7 @@ def create_smm_runme(arguments="", infile = "", outfile=""):
 		
 
 # Create a makefile for a cache-based architecture
-def create_cache_makefile():
+def create_cache_makefile(outfile=""):
 	#  Makefile
 	makefile = """
 PROGRAM = ${program}
@@ -189,7 +195,7 @@ $(PROGRAM): $(OBJECTS)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	-rm -rf  $(PROGRAM) *.s *.o *.bc *.ll *.dis *.txt *.dot *.ps *.adpcm
+	-rm -rf  $(PROGRAM) *.s *.o *.bc *.ll *.dis *.dot *.ps ${outfile}
     """
 	# Create the makefile using the created linker script
 	if (not os.path.isfile("Makefile")): 
@@ -213,6 +219,7 @@ clean:
 			makefile = makefile.replace("${original_objects}", original_objects)
 			makefile = makefile.replace("${program}", program)
 			makefile = makefile.replace("${source_file_extension}", source_file_extension)
+			makefile = makefile.replace("${outfile}", outfile)
 			f.write(makefile)
 
 
@@ -267,10 +274,10 @@ if __name__ == "__main__":
 		else:
 			assert False, "unhandled option"
 	if config == 1:
-		create_smm_makefile(arguments, infile)
+		create_smm_makefile(arguments, infile, outfile)
 		create_smm_runme(arguments, infile, outfile)
 	if config == 2:
-		create_cache_makefile()
+		create_cache_makefile(outfile)
 		create_cache_runme(arguments, infile, outfile)
 		
 	    
