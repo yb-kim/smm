@@ -75,7 +75,7 @@ callgraph:
 	dot -Tps callgraph.dot -o basic_$(PROGRAM).ps
 
 clean:
-	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.ps ${outfile} opt_$(PROGRAM) prof_$(PROGRAM) wcg_nodes.txt wcg_paths.txt wcg_cuts.txt
+	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis callgraph.dot basic_$(PROGRAM).ps ${outfile} opt_$(PROGRAM) prof_$(PROGRAM) wcg_nodes.txt wcg_paths.txt wcg_cuts.txt
     """
 
 	# Create the linker script for SPM setup
@@ -122,20 +122,26 @@ clean:
 		# Use the name of current folder as the name of generated executable file
 		program = os.path.basename(cwd)
 		with open('Makefile', 'w') as f:
+			# make + make opt
 			makefile = makefile.replace("${original_objects}", original_objects)
 			makefile = makefile.replace("${opt_objects}", opt_objects)
 			makefile = makefile.replace("${prof_objects}", prof_objects)
 			makefile = makefile.replace("${program}", program)
 			makefile = makefile.replace("${source_file_extension}", source_file_extension)
+			# make clean
+			if (outfile == ""):
+				arg_list = arguments.split()
+    				for i in range(len(arg_list)):
+					if "output" in arg_list[i]:
+						outfile = arg_list[i] 
+			makefile = makefile.replace("${outfile}", outfile + " opt_" +outfile)
+			# make prof
 			makefile = makefile.replace("${arguments}", arguments)
 			if (infile != ""):
 				makefile = makefile.replace("${infile}", "< " + infile)
 			else:
 				makefile = makefile.replace("${infile}", "")
-			if (outfile != ""):
-				makefile = makefile.replace("${outfile}", outfile + " opt_" +outfile)
 			f.write(makefile)
-
 
 # Create runme file for a SMM architecture
 def create_smm_runme(arguments="", infile = "", outfile=""):
@@ -148,12 +154,16 @@ def create_smm_runme(arguments="", infile = "", outfile=""):
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
 				if outfile == "":
-#					argument_list = arguments.split()
-#					for arg in argument_list:
-#					    if "output" in arg:
-#					    	arg.replace("output", "opt_output", 1)
-					arguments = arguments.replace("output", "opt_output", 1)
-				opt_text = opt_text + " -o \"" + arguments + "\""
+					arg_list = arguments.split()
+					for i in range(len(arg_list)):
+					    if "output" in arg_list[i]:
+					    	arg_list[i] = arg_list[i].replace("output", "opt_output", 1)
+					opt_arguments = " ".join(arg_list)
+					opt_text = opt_text + " -o \"" + opt_arguments + "\""
+					print arguments
+					print opt_arguments
+				else:
+					opt_text = opt_text + " -o \"" + arguments + "\""
 			if (infile!= ""):
 				text = text + " --input=\"" + infile + "\""
 				opt_text = opt_text + " --input=\"" + infile + "\""
@@ -195,7 +205,7 @@ $(PROGRAM): $(OBJECTS)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	-rm -rf  $(PROGRAM) *.s *.o *.bc *.ll *.dis *.dot *.ps ${outfile}
+	-rm -rf  $(PROGRAM) *.s *.o *.bc *.ll *.dis ${outfile}
     """
 	# Create the makefile using the created linker script
 	if (not os.path.isfile("Makefile")): 
