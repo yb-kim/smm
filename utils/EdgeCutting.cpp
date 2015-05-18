@@ -22,7 +22,7 @@ using namespace std;
 typedef struct _Node 
 {
     string funcName;
-    unsigned int stackSz;
+    unsigned long long stackSz;
     unsigned int NumOfFuncCalls;
 } Node;
 
@@ -122,12 +122,12 @@ int file2vector (
 		    else if (cnt == 1)
 		    {
 			n.stackSz = atoi((line.substr(i,pos-i)).c_str());
-			/*
-			if(n.stackSz != std::numeric_limits<short>::max() && n.stackSz > spmSize){
-			    cout<<"error! The stack size of function "<<n.funcName<<" exceeds the SPM size limit! SMP size = "<<spmSize<<", and function stack size = "<<n.stackSz<<endl;
+			//cout << n.stackSz<<endl;
+			//cout <<std::numeric_limits<long long>::max()<<endl;
+			if(n.stackSz != std::numeric_limits<int>::max() && n.stackSz > spmSize){
+			    cout<<"error! The stack size of function "<<n.funcName<<" exceeds the SPM size limit! SPM size = "<<spmSize<<", and function stack size = "<<n.stackSz<<endl;
 			    exit(-1);
 			}
-			*/
 			cnt++; 
 		    }
 		    else if (cnt == 2)
@@ -202,10 +202,10 @@ int file2vector (
 	return 3;
 }
 
-int cost (const vector<Node> &segment)
+long long cost (const vector<Node> &segment)
 {
-    int cost1 = 0, cost2 = 0;
-    int sumStackSizes = 0;
+    long long cost1 = 0, cost2 = 0;
+    long long sumStackSizes = 0;
 
     cost1 = (*(segment.end()-1)).NumOfFuncCalls * extraLibTime;
 
@@ -428,7 +428,7 @@ void SSDM(
 		long long cost_after = 0;
 		for (vector< vector<Node> >::iterator iterSeg=newSegments.begin(); iterSeg!=newSegments.end(); ++iterSeg)
 		{
-		    int segStackSzs = 0;
+		    long long segStackSzs = 0;
 		    for (vector<Node>::iterator iterNode=(*iterSeg).begin(); iterNode!=(*iterSeg).end(); ++iterNode)
 			segStackSzs += (*iterNode).stackSz;
 
