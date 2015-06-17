@@ -20,7 +20,7 @@ LIBDIRS=
 LIBS = -lm
 
 OBJECTS = ${original_objects}
-OPT_OBJECTS = stack_manager.bc ${opt_objects}
+OPT_OBJECTS = dma.bc stack_manager.bc ${opt_objects}
 PROF_OBJECTS = stack_management_helper.bc ${prof_objects}
 CC=clang
 CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3 -fno-inline
@@ -42,26 +42,29 @@ $(PROGRAM): $(OBJECTS)
 
 opt: $(OPT_OBJECTS)
 	llvm-link -o opt_basic_$(PROGRAM).bc $(OPT_OBJECTS)
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSmartStackManagement.so -smmssm < opt_basic_$(PROGRAM).bc > opt_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSmartStackDataManagement.so -smmssm < opt_basic_$(PROGRAM).bc > opt_$(PROGRAM).bc
 	llvm-dis < opt_$(PROGRAM).bc > opt_$(PROGRAM).ll
 	llc -O3 -o opt_$(PROGRAM).s opt_$(PROGRAM).bc 
 	$(CC) -o opt_$(PROGRAM) opt_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
 	objdump -d opt_$(PROGRAM) > opt_$(PROGRAM).dis
 
+dma.bc:$(SMMDIR)/dma.c
+	$(CC) -I$(SMMDIR) $(CFLAGS) $< -o $@
+
 stack_manager.bc:$(SMMDIR)/stack_manager.c
-	$(CC) -I$(SMMDIR) -include stack_manager.h $(CFLAGS) $< -o $@
+	$(CC) -I$(SMMDIR) $(CFLAGS) $< -o $@
 
 opt_%.bc: %${source_file_extension}
-	$(CC) -I$(SMMDIR) -include stack_manager.h  $(CFLAGS) $< -o $@
+	$(CC) -I$(SMMDIR) -include dma.h -include stack_manager.h  $(CFLAGS) $< -o $@
 
 prof: $(PROF_OBJECTS)
 	llvm-link -o prof_basic_$(PROGRAM).bc $(PROF_OBJECTS)
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSmartStackManagement.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSmartStackDataManagement.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
 	llvm-dis < prof_$(PROGRAM).bc > prof_$(PROGRAM).ll
 	llc -O3 -o prof_$(PROGRAM).s prof_$(PROGRAM).bc 
 	$(CC) -o prof_$(PROGRAM) prof_$(PROGRAM).s $(LDFLAGS)
 	./prof_$(PROGRAM) ${arguments} ${infile} > /dev/null
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSmartStackManagement.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSmartStackDataManagement.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
 	ssdm-cuts wcg_paths.txt 256 > wcg_cuts.txt
     	
 stack_management_helper.bc:$(SMMDIR)/stack_management_helper.c

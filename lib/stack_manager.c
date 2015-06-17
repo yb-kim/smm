@@ -1,4 +1,6 @@
 #include <string.h>
+
+#include "stack_manager.h"
 #include "dma.h"
 
 // stack Management Library
@@ -11,8 +13,19 @@ STACK_ENTRY _stack[20];
 // Pointer management
 static char *sp, *gaddr, *laddr;
 
+#ifdef STAT
+unsigned long _num_sstore = 0;
+unsigned long _num_sload = 0;
+unsigned long _num_l2g = 0;
+unsigned long _num_g2l = 0;
+unsigned long _num_ptr_wr = 0;
+#endif
+
 // evict oldest stack frames to make space for callee
 void _sstore() {
+#ifdef STAT
+    _num_sstore++;
+#endif
 	// move caller stack frame from SPM to memory
 	getSP(_stack[_stack_depth].spm_addr); // read current value of stack pointer
 	_stack[_stack_depth].spm_addr += 0x8; // offset the displacement of stack pointer caused by _sstore function (not needed if compilers inline this function)
@@ -34,6 +47,9 @@ void _sstore() {
 
 // ensure the caller stack frame is in SPM
 void _sload() {
+#ifdef STAT
+    _num_sload++;
+#endif
 	// bring back caller stack frame from memory to SPM
 	//putSP(_spm_sp); // restore the stack pointer to point to the original location in SPM
 	_stack_depth--; // decrease stack depth counter
@@ -44,6 +60,9 @@ void _sload() {
 // pointer threats resolution
 char * _l2g(char *laddr)
 {
+#ifdef STAT
+    _num_l2g++;
+#endif
 	// do address translation only if the address passed in is in the current stack frame
 	gaddr = laddr; // set return value to the passed in address by default
 	getSP(sp); // get current value of stack pointer
@@ -63,6 +82,9 @@ char * _l2g(char *laddr)
 
 char * _g2l(char *gaddr)
 {
+#ifdef STAT
+    _num_g2l++;
+#endif
 	// do address translation only if the address passed in is in the current stack frame
 	laddr = gaddr; // set return value to the passed in address by default
 	getSP(sp); // get current value of stack pointer
@@ -77,4 +99,18 @@ char * _g2l(char *gaddr)
 		}
 	}
 	return laddr;
+}
+
+/*
+void _ptr_wr(char *gaddr, unsigned long long val, unsigned long size) {
+    *gaddr = val;
+}
+*/
+
+void _ptr_wr(char *gaddr) {
+#ifdef STAT
+    _num_ptr_wr++;
+#endif
+    dma(gaddr, gaddr, 0, SPM2MEM);
+    return;
 }
