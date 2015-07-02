@@ -1,2 +1,0 @@
-#!/bin/sh
-smmstack --clean; smmstack --configure-smm --args "input.dat" --output="output.txt"
