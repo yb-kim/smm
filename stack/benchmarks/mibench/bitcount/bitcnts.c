@@ -17,8 +17,9 @@
 #define FUNCS  7
 
 #ifdef STAT
-extern unsigned long _num_sstore, _num_sload, _num_l2g, _num_g2l, _num_ptr_wr;
+extern unsigned long _num_dma, _dma_size, _num_sstore, _num_sload, _num_l2g, _num_g2l, _num_ptr_wr;
 #endif
+
 
 static int CDECL bit_shifter(long int x);
 
@@ -67,8 +68,9 @@ int main(int argc, char *argv[])
   printf("\nBest  > %s\n", text[cminix]);
   printf("Worst > %s\n", text[cmaxix]);
 #ifdef STAT
-    fprintf(stderr, "_num_dma=%lu, _num_sstore=%lu, _num_sload=%lu, _num_l2g=%lu, _num_g2l=%lu, _num_ptr_wr=%lu\n", _num_sstore + _num_sload + _num_g2l + _num_ptr_wr, _num_sstore, _num_sload, _num_l2g, _num_g2l, _num_ptr_wr);
+  fprintf(stderr, "_num_dma=%lu, _dma_size=%lu, _num_sstore=%lu, _num_sload=%lu, _num_l2g=%lu, _num_g2l=%lu, _num_ptr_wr=%lu\n", _num_dma, _dma_size,  _num_sstore, _num_sload, _num_l2g, _num_g2l, _num_ptr_wr);
 #endif
+
     //exit(0);
   return 0;
 }
