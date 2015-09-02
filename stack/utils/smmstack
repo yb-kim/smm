@@ -7,12 +7,12 @@ import sys
 
 
 # Create a makefile for a SMM architecture
-def create_smm_makefile(arguments="", infile = "", outfile=""):
+def create_smm_makefile(arguments="", infile = "", outfile="", spmsize = 256):
 	#  make file
 	makefile = """
 PROGRAM = ${program}
 
-SMMDIR=$(HOME)/Documents/smmstack/lib
+SMMLIB=$(HOME)/Documents/smm/stack/lib
 
 INCLUDEDIRS=
 INCLUDE=
@@ -20,7 +20,7 @@ LIBDIRS=
 LIBS = -lm
 
 OBJECTS = ${original_objects}
-OPT_OBJECTS = dma.bc stack_manager.bc ${opt_objects}
+OPT_OBJECTS = stack_manager.bc ${opt_objects}
 PROF_OBJECTS = stack_management_helper.bc ${prof_objects}
 CC=clang
 CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3 -fno-inline
@@ -40,45 +40,55 @@ $(PROGRAM): $(OBJECTS)
 %.bc: %${source_file_extension}
 	$(CC) $(CFLAGS) $< -o $@
 
-opt: $(OPT_OBJECTS)
-	llvm-link -o opt_basic_$(PROGRAM).bc $(OPT_OBJECTS)
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSmartStackDataManagement.so -smmssm < opt_basic_$(PROGRAM).bc > opt_$(PROGRAM).bc
-	llvm-dis < opt_$(PROGRAM).bc > opt_$(PROGRAM).ll
-	llc -O3 -o opt_$(PROGRAM).s opt_$(PROGRAM).bc 
-	$(CC) -o opt_$(PROGRAM) opt_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
-	objdump -d opt_$(PROGRAM) > opt_$(PROGRAM).dis
+ssm: $(OPT_OBJECTS)
+	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSSM.so -smmssm --debug-only=smmssm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
+	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).bc 
+	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
+	objdump -d $@_$(PROGRAM) > $@_$(PROGRAM).dis
 
-dma.bc:$(SMMDIR)/dma.c
-	$(CC) -I$(SMMDIR) $(CFLAGS) $< -o $@
+esm: $(OPT_OBJECTS)
+	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMESM.so -smmesm --debug-only=smmesm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
+	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).bc 
+	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
+	objdump -d $@_$(PROGRAM) > $@_$(PROGRAM).dis
 
-stack_manager.bc:$(SMMDIR)/stack_manager.c
-	$(CC) -I$(SMMDIR) $(CFLAGS) $< -o $@
+stack_manager.bc:$(SMMLIB)/stack_manager.c
+	$(CC) -I$(SMMLIB) $(CFLAGS) $< -o $@
 
 opt_%.bc: %${source_file_extension}
-	$(CC) -I$(SMMDIR) -include dma.h -include stack_manager.h  $(CFLAGS) $< -o $@
+	$(CC) -I$(SMMLIB) -include stack_manager.h $(CFLAGS) $< -o $@
 
 prof: $(PROF_OBJECTS)
-	llvm-link -o prof_basic_$(PROGRAM).bc $(PROF_OBJECTS)
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSmartStackDataManagement.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
-	llvm-dis < prof_$(PROGRAM).bc > prof_$(PROGRAM).ll
-	llc -O3 -o prof_$(PROGRAM).s prof_$(PROGRAM).bc 
-	$(CC) -o prof_$(PROGRAM) prof_$(PROGRAM).s $(LDFLAGS)
-	./prof_$(PROGRAM) ${arguments} ${infile} > /dev/null
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSmartStackDataManagement.so -smmsmh < prof_basic_$(PROGRAM).bc > prof_$(PROGRAM).bc
-	ssdm-cuts wcg_paths.txt 256 > wcg_cuts.txt
+	llvm-link -o $@_raw_$(PROGRAM).bc $(PROF_OBJECTS)
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSSM.so -smmsmh < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
+	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).bc 
+	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS)
+	./$@_$(PROGRAM) ${arguments} ${infile} > /dev/null
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSSM.so -smmsmh < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	ssdm-cuts wcg_paths.txt ${spm_size} > wcg_cuts.txt
     	
-stack_management_helper.bc:$(SMMDIR)/stack_management_helper.c
-	$(CC) -I$(SMMDIR) -include stack_management_helper.h $(CFLAGS) $< -o $@
+stack_management_helper.bc:$(SMMLIB)/stack_management_helper.c
+	$(CC) -I$(SMMLIB) -include stack_management_helper.h $(CFLAGS) $< -o $@
 
 prof_%.bc: %${source_file_extension}
-	$(CC) -I$(SMMDIR) -include stack_management_helper.h $(CFLAGS) $< -o $@
+	$(CC) -I$(SMMLIB) -include stack_management_helper.h $(CFLAGS) $< -o $@
+
+opt:
+	make prof
+	make ssm
+	make esm
 
 callgraph:
 	opt -O3 -disable-inlining -dot-callgraph < basic_$(PROGRAM).bc
 	dot -Tps callgraph.dot -o basic_$(PROGRAM).ps
 
 clean:
-	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis callgraph.dot basic_$(PROGRAM).ps ${outfile} opt_$(PROGRAM) prof_$(PROGRAM) wcg_nodes.txt wcg_paths.txt wcg_cuts.txt
+	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.ps ${outfile} ssm_$(PROGRAM) esm_$(PROGRAM) prof_$(PROGRAM) wcg_nodes.txt wcg_paths.txt wcg_cuts.txt
     """
 
 	# Create the linker script for SPM setup
@@ -144,6 +154,7 @@ clean:
 				makefile = makefile.replace("${infile}", "< " + infile)
 			else:
 				makefile = makefile.replace("${infile}", "")
+			makefile = makefile.replace("${spm_size}", str(spmsize))
 			f.write(makefile)
 
 # Create runme file for a SMM architecture
@@ -152,29 +163,26 @@ def create_smm_runme(arguments="", infile = "", outfile=""):
 	# Create a runme file 
 	if (not os.path.isfile("runme")):
 		with open("runme", "w") as f:
-			text = "#!/bin/sh\nSIMDIR=$HOME/Applications/smm_gem5\n$SIMDIR/build/X86/gem5.debug -d m5out/smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + program
-			opt_text = "$SIMDIR/build/X86/gem5.debug -d m5out/opt-smm -r $SIMDIR/configs/example/se.py --cpu-type=atomic -c opt_" + program
+			prolog = "#!/bin/sh\nWORK=$HOME\nSIMDIR=$WORK/Applications/gem5"
+			text = "$SIMDIR/build/X86/gem5.debug -r -d m5out/smm $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + program
+			ssm_text = "$SIMDIR/build/X86/gem5.debug -r -d m5out/smmssm $SIMDIR/configs/example/se.py --cpu-type=atomic -c ssm_" + program
+			esm_text = "$SIMDIR/build/X86/gem5.debug -r -d m5out/smmesm $SIMDIR/configs/example/se.py --cpu-type=atomic -c esm_" + program
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
-				if outfile == "":
-					arg_list = arguments.split()
-					for i in range(len(arg_list)):
-					    if "output" in arg_list[i]:
-					    	arg_list[i] = arg_list[i].replace("output", "opt_output", 1)
-					opt_arguments = " ".join(arg_list)
-					opt_text = opt_text + " -o \"" + opt_arguments + "\""
-					print arguments
-					print opt_arguments
-				else:
-					opt_text = opt_text + " -o \"" + arguments + "\""
+				ssm_text = text + " -o \"" + arguments.replace("output", "ssm_output", 1) + "\""
+				esm_text = text + " -o \"" + arguments.replace("output", "esm_output", 1) + "\""
 			if (infile!= ""):
 				text = text + " --input=\"" + infile + "\""
-				opt_text = opt_text + " --input=\"" + infile + "\""
+				ssm_text = ssm_text + " --input=\"" + infile + "\""
+				esm_text = esm_text + " --input=\"" + infile + "\""
 			if (outfile != ""):
 				text = text + " --output=\"" + outfile + "\""
-				opt_text = opt_text + " --output=\"opt_" + outfile + "\""
+				ssm_text = ssm_text + " --output=\"ssm_" + outfile + "\""
+				esm_text = esm_text + " --output=\"esm_" + outfile + "\""
+			f.write(prolog + "\n")
 			f.write(text + "\n")
-			f.write(opt_text + "\n")
+			f.write(ssm_text + "\n")
+			f.write(esm_text + "\n")
     		subprocess.Popen("chmod 755 runme", stdout=subprocess.PIPE, shell=True)
 		
 
@@ -253,7 +261,7 @@ def create_cache_runme(arguments="", infile="", output=""):
 # Get options
 if __name__ == "__main__":
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "-h", ["help", "configure-smm", "args=", "input=", "output=", "clean", "configure-cache"]) 
+		opts, args = getopt.getopt(sys.argv[1:], "-h", ["help", "configure-smm", "spm-size=", "args=", "input=", "output=", "clean", "configure-cache"]) 
 	except getopt.GetoptError as err:
 		print str(err)
 		sys.exit(2)
@@ -261,9 +269,10 @@ if __name__ == "__main__":
 	infile = ""
 	outfile = ""
 	config = 0
+	spmsize = 256
 	for opt, arg in opts:
 		if opt in ("-h", "--help"):
-			print 'smm --configure-smm --configure-cache --args --input --output --clean'
+			print 'smmstack --configure-smm --spm-size --configure-cache --args --input --output --clean'
 			sys.exit()
 		elif opt in ("--configure-smm"):
 			config = 1
@@ -275,6 +284,8 @@ if __name__ == "__main__":
 			infile = arg
 		elif opt in ("--output"):
 			outfile = arg
+		elif opt in("--spm-size"):
+			spmsize = arg
 		elif opt in ("--clean"):
 			if (os.path.isfile("spm.ld")):
     				subprocess.Popen("rm spm.ld", stdout=subprocess.PIPE, shell=True)
@@ -286,8 +297,9 @@ if __name__ == "__main__":
     				subprocess.Popen("rm -r m5out", stdout=subprocess.PIPE, shell=True)
 		else:
 			assert False, "unhandled option"
+
 	if config == 1:
-		create_smm_makefile(arguments, infile, outfile)
+		create_smm_makefile(arguments, infile, outfile, spmsize)
 		create_smm_runme(arguments, infile, outfile)
 	if config == 2:
 		create_cache_makefile(outfile)

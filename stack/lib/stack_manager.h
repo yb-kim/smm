@@ -1,6 +1,8 @@
 #ifndef __STACK_MANAGER_H__
 #define __STACK_MANAGER_H__
 
+#include <stddef.h>
+
 #define getSP(sp) { __asm __volatile("mov %%rsp, %0;\n":"=m"(sp));}
 #define putSP(sp) { __asm __volatile("mov %0, %%rsp;\n"::"m"(sp):"%rsp");}
 
@@ -20,8 +22,7 @@ void _sstore() __attribute__((noinline));
 void _sload() __attribute__((noinline));
 
 char * _l2g(char *) __attribute__((noinline));
-char * _g2l(char *) __attribute__((noinline));
-//void _ptr_wr(char *, unsigned long long, unsigned long) __attribute__((noinline));
-void _ptr_wr(char *) __attribute__((noinline));
+char * _g2l(char *, unsigned long) __attribute__((noinline));
+void _ptr_wr(char *, unsigned long) __attribute__((noinline));
 
 #endif

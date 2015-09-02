@@ -26,10 +26,6 @@ static size_t table[UCHAR_MAX + 1];
 static size_t len;
 static char *findme;
 
-#ifdef STAT
-extern unsigned long _num_dma, _dma_size, _num_sstore, _num_sload, _num_l2g, _num_g2l, _num_ptr_wr;
-#endif
-
 /*
  **  Call this with the string to locate to initialize the table
  */
@@ -166,10 +162,6 @@ int main()
 			printf(" [\"%s\"]", here);
 		putchar('\n');
 	}
-
-#ifdef STAT
-	fprintf(stderr, "_num_dma=%lu, _dma_size=%lu, _num_sstore=%lu, _num_sload=%lu, _num_l2g=%lu, _num_g2l=%lu, _num_ptr_wr=%lu\n", _num_dma, _dma_size,  _num_sstore, _num_sload, _num_l2g, _num_g2l, _num_ptr_wr);
-#endif
 
 	return 0;
 }

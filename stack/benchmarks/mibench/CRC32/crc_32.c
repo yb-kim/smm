@@ -71,11 +71,6 @@ typedef DWORD UNS_32_BITS;
 /*     hardware you could probably optimize the shift in assembler by  */
 /*     using byte-swap instructions.                                   */
 
-#ifdef STAT
-extern unsigned long _num_dma, _dma_size, _num_sstore, _num_sload, _num_l2g, _num_g2l, _num_ptr_wr;
-#endif
-
-
 static UNS_32_BITS crc_32_tab[] = { /* CRC polynomial 0xedb88320 */
 0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
 0xe963a535, 0x9e6495a3, 0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
@@ -188,9 +183,6 @@ main(int argc, char *argv[])
             errors |= crc32file(*++argv, &crc, &charcnt);
             printf("%08lX %7ld %s\n", crc, charcnt, *argv);
       }
-#ifdef STAT
-      fprintf(stderr, "_num_dma=%lu, _dma_size=%lu, _num_sstore=%lu, _num_sload=%lu, _num_l2g=%lu, _num_g2l=%lu, _num_ptr_wr=%lu\n", _num_dma, _dma_size,  _num_sstore, _num_sload, _num_l2g, _num_g2l, _num_ptr_wr);
-#endif
 
       return(errors != 0);
 }

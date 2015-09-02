@@ -71,10 +71,6 @@
 
 #define RAND(a,b) (((a = 36969 * (a & 65535) + (a >> 16)) << 16) + (b = 18000 * (b & 65535) + (b >> 16))  )
 
-#ifdef STAT
-extern unsigned long _num_dma, _dma_size, _num_sstore, _num_sload, _num_l2g, _num_g2l, _num_ptr_wr;
-#endif
-
 void fillrand(char *buf, int len)
 {   static unsigned long a[2], mt = 1, count = 4;
     static char          r[4];
@@ -311,8 +307,5 @@ exit:
     if(fin)
 	fclose(fin);
 
-#ifdef STAT
-    fprintf(stderr, "_num_dma=%lu, _dma_size=%lu, _num_sstore=%lu, _num_sload=%lu, _num_l2g=%lu, _num_g2l=%lu, _num_ptr_wr=%lu\n", _num_dma, _dma_size,  _num_sstore, _num_sload, _num_l2g, _num_g2l, _num_ptr_wr);
-#endif
     return err;
 }
