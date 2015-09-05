@@ -1,0 +1,2 @@
+#!/bin/sh
+smmstack --clean; smmstack --configure-smm --args small.udp --output output.txt --spm-size 616

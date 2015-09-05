@@ -1,0 +1,2 @@
+#!/bin/sh
+smmstack --clean; smmstack --configure-smm --args "data/small.pcm" --output=output.txt --spm-size 208

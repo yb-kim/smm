@@ -1,0 +1,2 @@
+#!/bin/sh
+smmstack --clean; smmstack --configure-smm --args 75000 --output=output_small.txt --spm-size 308
