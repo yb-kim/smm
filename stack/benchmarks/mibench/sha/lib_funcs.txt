@@ -1,0 +1,13 @@
+strcmp
+llvm.lifetime.end
+printf
+llvm.uadd.with.overflow.i64
+strcpy
+__assert_fail
+fopen
+fprintf
+fclose
+llvm.memcpy.p0i8.p0i8.i64
+llvm.memset.p0i8.i64
+llvm.lifetime.start
+fread

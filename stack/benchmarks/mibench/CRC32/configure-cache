@@ -1,2 +1,3 @@
 #!/bin/sh
-smmstack --clean; smmstack --configure-cache --args "data/small.pcm" --output=output.txt
+#smmstack --clean; smmstack --configure-cache --l1d_size 256B --args "data/small.pcm" --output=output.txt
+smmstack --clean; smmstack --configure-cache --l1d_size 2kB --args "data/small.pcm" --output=output.txt

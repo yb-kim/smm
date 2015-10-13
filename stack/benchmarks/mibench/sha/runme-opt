@@ -1,0 +1,5 @@
+#!/bin/sh
+WORK=$HOME
+SIMDIR=$WORK/Applications/gem5
+$SIMDIR/build/X86/gem5.debug -q -r -e -d m5out/smmssm $SIMDIR/configs/example/se.py --cpu-type=atomic -c ssm_sha -o "input_small.asc" --output="ssm_output.txt"
+$SIMDIR/build/X86/gem5.debug -q -r -e -d m5out/smmesm $SIMDIR/configs/example/se.py --cpu-type=atomic -c esm_sha -o "input_small.asc" --output="esm_output.txt"

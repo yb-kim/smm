@@ -1,0 +1,10 @@
+strcmp
+strcpy
+__assert_fail
+fopen
+fprintf
+fclose
+perror
+_IO_getc
+ferror
+printf

@@ -1,0 +1,17 @@
+strcmp
+strcpy
+__assert_fail
+fopen
+fprintf
+fclose
+strlen
+strncmp
+printf
+putchar
+realloc
+exit
+atexit
+__ctype_toupper_loc
+__ctype_tolower_loc
+tolower
+free

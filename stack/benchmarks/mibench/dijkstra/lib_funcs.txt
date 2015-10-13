@@ -1,0 +1,15 @@
+free
+strcmp
+strcpy
+__assert_fail
+fopen
+fprintf
+fclose
+printf
+fflush
+malloc
+exit
+__isoc99_fscanf
+fwrite
+putchar
+puts

@@ -1,0 +1,5 @@
+#!/bin/sh
+WORK=$HOME
+SIMDIR=$WORK/Applications/gem5
+$SIMDIR/build/X86/gem5.debug -q -r -e -d m5out/smmssm $SIMDIR/configs/example/se.py --cpu-type=atomic -c ssm_rijndael.decode -o "input_small.enc ssm_output_small.dec d 1234567890abcdeffedcba09876543211234567890abcdeffedcba0987654321"
+$SIMDIR/build/X86/gem5.debug -q -r -e -d m5out/smmesm $SIMDIR/configs/example/se.py --cpu-type=atomic -c esm_rijndael.decode -o "input_small.enc esm_output_small.dec d 1234567890abcdeffedcba09876543211234567890abcdeffedcba0987654321"
