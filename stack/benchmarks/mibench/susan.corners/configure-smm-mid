@@ -1,0 +1,3 @@
+#!/bin/sh
+#smmstack --clean; smmstack --configure-smm --spm-size 524288 --args "input_small.pgm output_small.corners.pgm -c" --spm-size 365680
+smmstack --clean; smmstack --configure-smm --spm-size 524288 --args "input_small.pgm output_small.corners.pgm -c" --spm-size 367068

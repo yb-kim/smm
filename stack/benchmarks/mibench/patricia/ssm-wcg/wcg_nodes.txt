@@ -1,0 +1,5 @@
+main 248
+pat_search 88
+bit 72
+pat_insert 120
+insertR 88

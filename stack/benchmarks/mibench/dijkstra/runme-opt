@@ -1,5 +1,0 @@
-#!/bin/sh
-WORK=$HOME
-SIMDIR=$WORK/Applications/gem5
-$SIMDIR/build/X86/gem5.debug -q -r -e -d m5out/smmssm $SIMDIR/configs/example/se.py --cpu-type=atomic -c ssm_dijkstra -o "input.dat" --output="ssm_output.txt"
-$SIMDIR/build/X86/gem5.debug -q -r -e -d m5out/smmesm $SIMDIR/configs/example/se.py --cpu-type=atomic -c esm_dijkstra -o "input.dat" --output="esm_output.txt"
