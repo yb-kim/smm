@@ -1,0 +1,1 @@
+smmcode --clean; smmcode --configure-smm

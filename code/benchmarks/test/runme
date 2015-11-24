@@ -1,0 +1,5 @@
+#!/bin/sh
+WORK=$HOME
+SIMDIR=$WORK/Applications/gem5
+$SIMDIR/build/X86/gem5.debug -q -r -d m5out/smm $SIMDIR/configs/example/se.py --cpu-type=atomic -c test
+$SIMDIR/build/X86/gem5.debug -q -r -d m5out/smmcm $SIMDIR/configs/example/se.py --cpu-type=atomic -c cm_test
