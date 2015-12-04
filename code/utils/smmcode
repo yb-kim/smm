@@ -21,7 +21,7 @@ LIBS = -lm
 
 OBJECTS = ${original_objects}
 OPT_OBJECTS = code_manager.bc ${opt_objects}
-CC=clang++
+CC=clang
 CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3 -fno-inline
 LDFLAGS = $(LIBDIRS) $(LIBS) -static
 
@@ -47,11 +47,11 @@ cm: $(OPT_OBJECTS)
 	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
 	objdump -d $@_$(PROGRAM) > $@_$(PROGRAM).dis
 
-code_manager.bc:$(SMMLIB)/code_manager.cpp
-	$(CC) -I$(SMMLIB) -include code_manager.hpp $(CFLAGS) $< -o $@
+code_manager.bc:$(SMMLIB)/code_manager.c
+	$(CC) -I$(SMMLIB) -include code_manager.h $(CFLAGS) $< -o $@
 
 opt_%.bc: %${source_file_extension}
-	$(CC) -I$(SMMLIB) -include code_manager.hpp $(CFLAGS) $< -o $@
+	$(CC) -I$(SMMLIB) -include code_manager.h $(CFLAGS) $< -o $@
 
 callgraph:
 	opt -O3 -disable-inlining -dot-callgraph < basic_$(PROGRAM).bc

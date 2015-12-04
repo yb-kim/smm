@@ -1,7 +1,0 @@
-Working:
-qsort
-
-Not Working:
-dijkstra(original version does not run)
-stringsearch(llvm.memcpy intrinsic needs special handle)
-CRC32(testing)
