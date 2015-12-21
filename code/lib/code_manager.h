@@ -14,7 +14,7 @@ typedef struct _Map {
 } Map;
 
 int c_init(const char *mapping_file_name);
-int c_init_reg(int num, ...);
+int c_init_reg(int num); 
 int c_init_map(int num, ...);
 char* c_get(char *func_name);
 

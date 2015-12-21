@@ -4,16 +4,17 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include "code_manager.h"
+#include "dma.h"
 
 Region *_region_table;
 Map *_mapping_table;
 int mapping_table_size;
 int region_table_size;
 
-int c_init_reg(int num, ...) {
+int c_init_reg(int num) {
     int i;
-    va_list vl;
-    va_start(vl, num);
+    //va_list vl;
+    //va_start(vl, num);
 
     region_table_size = num;
     _region_table = (Region *)malloc(sizeof(Region) * num);
@@ -21,7 +22,7 @@ int c_init_reg(int num, ...) {
 	//_region_table[i].spm_addr = va_arg(vl, char *);
 	_region_table[i].func_name = NULL;
     }
-    va_end(vl);
+    //va_end(vl);
 
     return 0;
 }
@@ -53,12 +54,13 @@ char* c_get(char *func_name) {
     }
 
     if(i == mapping_table_size) {
-	printf("cannot find mapping\n");
+	printf("Cannot find mapping for %s\n", func_name);
 	exit(-1);
     }
 
     if(strcmp(func_name, map->reg->func_name)) {
-	memcpy(map->func_vma, map->func_lma, map->func_size);
+	//memcpy(map->func_vma, map->func_lma, map->func_size);
+	dma(map->func_vma, map->func_lma, map->func_size, MEM2SPM);
 	strcpy(map->reg->func_name, func_name);
     }
     return map->func_vma;
