@@ -319,8 +319,8 @@ main 360168 1 susan_principle_small 2147483647 0
 main 360168 1 susan_principle 2147483647 0 
 main 360168 1 int_to_uchar 2147483647 0 
 main 360168 1 malloc 40 0 
-main 360168 1 susan_edges_small 2147483647 1 sqrtf 2147483647 0 
-main 360168 1 susan_edges 936 1 sqrtf 2147483647 0 
+main 360168 1 susan_edges_small 224 1 sqrtf 8 0 
+main 360168 1 susan_edges 936 1 sqrtf 8 0 
 main 360168 1 susan_thin 232 0 
 main 360168 1 edge_draw 88 0 
 main 360168 1 malloc 40 0 

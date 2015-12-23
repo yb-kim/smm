@@ -11,6 +11,8 @@ char *_spm_stack_base, *_mem_stack_base;
 long long int _stack_depth = 0;
 STACK_ENTRY _stack[20];
 
+char buf1[128], buf2[128];
+
 // Pointer management
 static char *sp, *gaddr, *laddr;
 
@@ -73,10 +75,12 @@ char * _g2l(char *gaddr, unsigned long size) {
     if (_stack_depth == 0) {
 	if (gaddr >= _mem_stack_base - (_spm_stack_base - sp) && gaddr < _mem_stack_base) {
 	    laddr = _spm_stack_base - (_mem_stack_base - gaddr);
+	    dma((void *)buf1, (void *)gaddr, size, MEM2SPM);
 	}
     } else {
 	if (gaddr >= _stack[_stack_depth-1].mem_addr - (_spm_stack_base - sp) && gaddr < _stack[_stack_depth-1].mem_addr) {
 	    laddr = _spm_stack_base - (_stack[_stack_depth-1].mem_addr - gaddr);
+	    dma((void *)buf1, (void *)gaddr, size, MEM2SPM);
 	}
     }
 
@@ -84,4 +88,15 @@ char * _g2l(char *gaddr, unsigned long size) {
 }
 
 void _ptr_wr(char *gaddr, unsigned long size) {
+    getSP(sp); // get current value of stack pointer
+    sp += 0x8; // offset the displacement of stack pointer caused by _g2l function (not needed if compilers inline this function)
+    if (_stack_depth == 0) {
+	if (gaddr >= _mem_stack_base - (_spm_stack_base - sp) && gaddr < _mem_stack_base) {
+	    dma((void *)buf1, (void *)buf2, size, SPM2MEM);
+	}
+    } else {
+	if (gaddr >= _stack[_stack_depth-1].mem_addr - (_spm_stack_base - sp) && gaddr < _stack[_stack_depth-1].mem_addr) {
+	    dma((void *)buf1, (void *)buf2, size, SPM2MEM);
+	}
+    }
 }

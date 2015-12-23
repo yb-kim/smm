@@ -14,3 +14,5 @@ fread 104
 fopen 72
 malloc 40
 fprintf 1736
+susan_edges_small 224
+sqrtf 8
