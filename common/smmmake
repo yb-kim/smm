@@ -7,7 +7,7 @@ import sys
 
 
 # Create a makefile for SMM code management
-def create_smm_code_makefile(arguments="", infile = "", outfile="", spmsize = 256, mapping=""):
+def create_smm_code_makefile(arguments="", infile = "", outfile="", spmsize = 256):
 	#  make file
 	makefile = """
 PROGRAM = ${program}
@@ -64,38 +64,37 @@ clean:
 
 	# Create the overlay of sections in the linker script from mapping file
 	overlay_script = []
-    	if mapping != "":
-		overlays = dict()
-		with open(mapping) as f:
-			numSec = int(f.readline())
-			for i in range(numSec):
-				overlays[i] = {"functions": []}
+	overlays = dict()
+	with open("_mapping") as f:
+		numSec = int(f.readline())
+		for i in range(numSec):
+			overlays[i] = {"functions": []}
 
-			for line in f:
-				line = line.strip()
-    				if line == "":
-					continue;
- 				tokens = line.split(" ")
-   				func = tokens[0]
-   				sec = int(tokens[1])
-				#print func, " ", sec
-   				overlays[sec]['functions'].append(func)
+		for line in f:
+			line = line.strip()
+    			if line == "":
+				continue;
+ 			tokens = line.split(" ")
+   			func = tokens[0]
+   			sec = int(tokens[1])
+			#print func, " ", sec
+   			overlays[sec]['functions'].append(func)
 
-		last_func = ""
-		overlay_script.append("\n  . = _spm_begin;\n")
-		for i in range(len(overlays)):
-			overlay = overlays[i]
-			if i == 0:
-				overlay_script.append("  OVERLAY ALIGN(0x10) : AT (_spm_end) {\n")
-			else:
-				overlay_script.append("  OVERLAY ALIGN(0x10) : {\n")
-			for func in overlay["functions"]:
-				last_func = func
-				overlay_script.append("  .%s { *.(%s) }\n" % (func, func))
-			overlay_script.append("  }\n")
-		overlay_script.append("  . = LOADADDR(.%s) + SIZEOF(.%s);\n" % (last_func, last_func));
-		overlay_script.append("  _realign_addr = ALIGN(0x10);\n");
-		overlay_script.append("  .realign _realign_addr : AT (_realign_addr) { FILL(0x0) QUAD(0x0) QUAD(0x0) }\n\n");
+	last_func = ""
+	overlay_script.append("\n  . = _spm_begin;\n")
+	for i in range(len(overlays)):
+		overlay = overlays[i]
+		if i == 0:
+			overlay_script.append("  OVERLAY ALIGN(0x10) : AT (_spm_end) {\n")
+		else:
+			overlay_script.append("  OVERLAY ALIGN(0x10) : {\n")
+		for func in overlay["functions"]:
+			last_func = func
+			overlay_script.append("  .%s { *.(%s) }\n" % (func, func))
+		overlay_script.append("  }\n")
+	overlay_script.append("  . = LOADADDR(.%s) + SIZEOF(.%s);\n" % (last_func, last_func));
+	overlay_script.append("  _realign_addr = ALIGN(0x10);\n");
+	overlay_script.append("  .realign _realign_addr : AT (_realign_addr) { FILL(0x0) QUAD(0x0) QUAD(0x0) }\n\n");
 
 	# Create the linker script with SPM
 	if (not os.path.isfile("spm.ld")): 
@@ -592,7 +591,7 @@ def create_cache_runme(dsize = "", arguments="", infile="", outfile=""):
 # Get options
 if __name__ == "__main__":
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "-h", ["help", "configure-cache", "configure-code=", "configure-stack", "configure-global", "spm-size=", "args=", "input=", "output=", "clean", "l1d_size="]) 
+		opts, args = getopt.getopt(sys.argv[1:], "-h", ["help", "configure-cache", "configure-code", "configure-stack", "configure-global", "spm-size=", "args=", "input=", "output=", "clean", "l1d_size="]) 
 	except getopt.GetoptError as err:
 		print str(err)
 		sys.exit(2)
@@ -609,7 +608,6 @@ if __name__ == "__main__":
 		elif opt in ("--configure-cache"):
 			config = 1
 		elif opt in ("--configure-code"):
-			mapping = arg
 			config = 2
 		elif opt in ("--configure-stack"):
 			config = 3
@@ -643,7 +641,7 @@ if __name__ == "__main__":
 		create_cache_makefile(outfile)
 		create_cache_runme(dsize, arguments, infile, outfile)
     	if config == 2:
-		create_smm_code_makefile(arguments, infile, outfile, spmsize, mapping)
+		create_smm_code_makefile(arguments, infile, outfile, spmsize)
 		create_smm_runme(arguments, infile, outfile)
 	if config == 3:
 		create_smm_stack_makefile(arguments, infile, outfile, spmsize)
