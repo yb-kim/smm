@@ -1,0 +1,12 @@
+2
+
+bmh_init 0
+bmh_search 0
+bmhi_init 0
+bhmi_cleanup 0
+bmhi_search 1
+init_search 1
+strsearch 1
+bmha_init 1
+bmha_search 1
+main 1

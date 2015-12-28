@@ -1,0 +1,21 @@
+2
+
+get_image 0
+put_image 0
+usage 1
+getint 0
+int_to_uchar 0
+setup_brightness_lut 1
+susan_principle 0
+susan_principle_small 0
+median 0
+enlarge 0
+susan_smoothing 1
+edge_draw 0
+susan_thin 1
+susan_edges 1
+susan_edges_small 0
+corner_draw 1
+susan_corners 0
+susan_corners_quick 0
+main 1

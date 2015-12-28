@@ -1,0 +1,10 @@
+2
+
+sha_print 0
+sha_stream 1
+sha_final 0
+sha_update 1
+sha_init 0
+sha_transform 1
+byte_reverse 0
+main 1

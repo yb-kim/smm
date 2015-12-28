@@ -1,0 +1,9 @@
+2
+
+encfile 0
+fillrand 1
+encrypt 0
+decrypt 1
+decfile 0 
+set_key 1
+main 1
