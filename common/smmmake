@@ -55,10 +55,10 @@ opt_%.bc: %${source_file_extension}
 
 callgraph:
 	opt -O3 -disable-inlining -dot-callgraph < basic_$(PROGRAM).bc
-	dot -Tps callgraph.dot -o basic_$(PROGRAM).ps
+	dot -Tgif callgraph.dot -o basic_$(PROGRAM).gif
 
 clean:
-	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.ps ${outfile} cm_$(PROGRAM) 
+	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.gif ${outfile} cm_$(PROGRAM) _exec_trace
     """
 
 
@@ -272,10 +272,10 @@ opt:
 
 callgraph:
 	opt -O3 -disable-inlining -dot-callgraph < basic_$(PROGRAM).bc
-	dot -Tps callgraph.dot -o basic_$(PROGRAM).ps
+	dot -Tgif callgraph.dot -o basic_$(PROGRAM).gif
 
 clean:
-	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.ps ${outfile} ssm_$(PROGRAM) esm_$(PROGRAM) ssm-prof_$(PROGRAM) esm-prof_$(PROGRAM) wcg_cuts.txt lib_funcs.txt
+	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.gif ${outfile} ssm_$(PROGRAM) esm_$(PROGRAM) ssm-prof_$(PROGRAM) esm-prof_$(PROGRAM) wcg_cuts.txt lib_funcs.txt
     """
 
 	# Create the linker script for SPM setup
@@ -530,7 +530,8 @@ all: $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
 	llvm-link -o basic_$@.bc $(OBJECTS)
-	opt -O3 -disable-inlining < basic_$@.bc > $@.bc
+	opt -O3 -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMTest.so -test-cg < basic_$@.bc > $@.bc
+	#opt -O3 -disable-inlining < basic_$@.bc > $@.bc
 	llvm-dis < $@.bc > $@.ll
 	llc -O3 -o $@.s $@.bc
 	$(CC) -o $@ $@.s $(LDFLAGS)
@@ -539,8 +540,12 @@ $(PROGRAM): $(OBJECTS)
 %.bc: %${source_file_extension}
 	$(CC) $(CFLAGS) $< -o $@
 
+callgraph:
+	opt -O3 -disable-inlining -dot-callgraph < basic_$(PROGRAM).bc
+	dot -Tgif callgraph.dot -o basic_$(PROGRAM).gif
+
 clean:
-	-rm -rf  $(PROGRAM) *.s *.o *.bc *.ll *.dis ${outfile}
+	-rm -rf  $(PROGRAM) *.s *.o *.bc *.ll *.dis  ${outfile} *.gif *.gif
     """
 	# Create the makefile using the created linker script
 	if (not os.path.isfile("Makefile")): 
