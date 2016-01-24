@@ -6,166 +6,6 @@ import subprocess
 import sys
 
 
-# Create a makefile for SMM code management
-def create_smm_code_makefile(arguments="", infile = "", outfile="", spmsize = 256):
-	#  make file
-	makefile = """
-PROGRAM = ${program}
-
-SMMLIB=$(HOME)/Documents/smm/code/lib
-
-INCLUDEDIRS=
-INCLUDE=
-LIBDIRS=
-LIBS = -lm
-
-OBJECTS = ${original_objects}
-OPT_OBJECTS = code_manager.bc ${opt_objects}
-CC=clang
-CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3 -fno-inline
-LDFLAGS = $(LIBDIRS) $(LIBS) -static
-
-all: $(PROGRAM)
-
-$(PROGRAM): $(OBJECTS)
-	llvm-link -o basic_$@.bc $(OBJECTS)
-	opt -O3 -disable-inlining < basic_$@.bc > $@.bc
-	llvm-dis < $@.bc > $@.ll
-	llc -O3 -o $@.s $@.bc 
-	$(CC) -o $@ $@.s $(LDFLAGS)
-	objdump -d $@ > $@.dis
-
-
-%.bc: %${source_file_extension}
-	$(CC) $(CFLAGS) $< -o $@
-
-cm: $(OPT_OBJECTS)
-	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCM.so -smmcm --debug-only=smmcm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
-	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
-	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).bc 
-	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
-	objdump -d $@_$(PROGRAM) > $@_$(PROGRAM).dis
-
-code_manager.bc:$(SMMLIB)/code_manager.c
-	$(CC) -I$(SMMLIB) -include code_manager.h $(CFLAGS) $< -o $@
-
-opt_%.bc: %${source_file_extension}
-	$(CC) -I$(SMMLIB) -include code_manager.h $(CFLAGS) $< -o $@
-
-callgraph:
-	opt -O3 -disable-inlining -dot-callgraph < basic_$(PROGRAM).bc
-	dot -Tgif callgraph.dot -o basic_$(PROGRAM).gif
-
-clean:
-	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.gif ${outfile} cm_$(PROGRAM) _exec_trace
-    """
-
-
-	# Create the overlay of sections in the linker script from mapping file
-	overlay_script = []
-	overlays = dict()
-	with open("_mapping") as f:
-		numSec = int(f.readline())
-		for i in range(numSec):
-			overlays[i] = {"functions": []}
-
-		for line in f:
-			line = line.strip()
-    			if line == "":
-				continue;
- 			tokens = line.split(" ")
-   			func = tokens[0]
-   			sec = int(tokens[1])
-			#print func, " ", sec
-   			overlays[sec]['functions'].append(func)
-
-	last_func = ""
-	overlay_script.append("\n  . = _spm_begin;\n")
-	for i in range(len(overlays)):
-		overlay = overlays[i]
-		if i == 0:
-			overlay_script.append("  OVERLAY ALIGN(0x10) : AT (_spm_end) {\n")
-		else:
-			overlay_script.append("  OVERLAY ALIGN(0x10) : {\n")
-		for func in overlay["functions"]:
-			last_func = func
-			overlay_script.append("  .%s { *.(%s) }\n" % (func, func))
-		overlay_script.append("  }\n")
-	overlay_script.append("  . = LOADADDR(.%s) + SIZEOF(.%s);\n" % (last_func, last_func));
-	overlay_script.append("  _realign_addr = ALIGN(0x10);\n");
-	overlay_script.append("  .realign _realign_addr : AT (_realign_addr) { FILL(0x0) QUAD(0x0) QUAD(0x0) }\n\n");
-
-	# Create the linker script with SPM
-	if (not os.path.isfile("spm.ld")): 
-		with open('spm.ld', 'w') as linker_script:
-			implicit_linker_script = subprocess.Popen("ld --verbose", stdout=subprocess.PIPE, shell=True).communicate()[0].split("\n")
-			i = 0
-			while i <  range(len(implicit_linker_script)):
-		    		line = implicit_linker_script[i]
-    				while (line.find("==================================================") == -1):
-					i = i+1
-					line = implicit_linker_script[i]
-				i = i + 1
-    				line = implicit_linker_script[i]
-				while (line.find("==================================================") == -1):
-					if line.find("executable_start") != -1:
-					  	linker_script.write(line.replace("0x400000", "0x000000") + "\n  . = ALIGN(0x10);\n  _spm_begin = .;\n  . = . + 0x100000;\n  _spm_end = .;\n")
-						linker_script.writelines(overlay_script)
-					else:
-    						linker_script.write(line + "\n")
-					i = i+1
-					line = implicit_linker_script[i]
-				break;
-
-	# Create the makefile using the created linker script
-	if (not os.path.isfile("Makefile")): 
-		cwd = os.getcwd()
-		files = os.listdir(cwd)
-		objects = []
-		source_file_extension = ""
-		for i in range(len(files)):
-			(file, extension) = os.path.splitext(files[i])
-			if(extension == ".c" or extension == ".cpp" or extension == ".cc"):
-				objects.append(file)
-				if source_file_extension == "":
-					source_file_extension = extension
-		objects = list(set(objects))
-		original_objects = ""
-		opt_objects = ""
-#		prof_objects = ""
-	   	for i in range(len(objects)):
-			original_objects = original_objects + objects[i] + ".bc" + " "
-			opt_objects = opt_objects + "opt_" + objects[i] + ".bc" + " "
-#			prof_objects = prof_objects + "prof_" + objects[i] + ".bc" + " "
-		# Use the name of current folder as the name of generated executable file
-		program = os.path.basename(cwd)
-		with open('Makefile', 'w') as f:
-			# make + make opt
-			makefile = makefile.replace("${original_objects}", original_objects)
-			makefile = makefile.replace("${opt_objects}", opt_objects)
-#			makefile = makefile.replace("${prof_objects}", prof_objects)
-			makefile = makefile.replace("${program}", program)
-			makefile = makefile.replace("${source_file_extension}", source_file_extension)
-			# make clean
-			if (outfile == ""):
-				arg_list = arguments.split()
-    				for i in range(len(arg_list)):
-					if "output" in arg_list[i]:
-						outfile = arg_list[i] 
-			if (outfile == ""):
-				makefile = makefile.replace("${outfile}", "")
-			else:
-				makefile = makefile.replace("${outfile}", outfile + " cm_" + outfile)
-			# make prof
-			makefile = makefile.replace("${arguments}", arguments)
-			if (infile != ""):
-				makefile = makefile.replace("${infile}", "< " + infile)
-			else:
-				makefile = makefile.replace("${infile}", "")
-			makefile = makefile.replace("${spm_size}", str(spmsize))
-			f.write(makefile)
-
 
 
 # Create a makefile for SMM stack management
@@ -345,6 +185,130 @@ clean:
 			f.write(makefile)
 
 
+# Create a makefile for SMM heap management
+def create_smm_heap_makefile(arguments="", infile = "", outfile="", spmsize = 256):
+	#  make file
+	makefile = """
+PROGRAM = ${program}
+
+SMMLIB=$(HOME)/Documents/smm/heap/lib
+
+INCLUDEDIRS=
+INCLUDE=
+LIBDIRS=
+LIBS = -lm
+
+OBJECTS = ${original_objects}
+OPT_OBJECTS = heap_manager.bc ${opt_objects}
+CC=clang
+CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3 -fno-inline
+LDFLAGS = $(LIBDIRS) $(LIBS) -static
+
+all: $(PROGRAM)
+
+$(PROGRAM): $(OBJECTS)
+	llvm-link -o basic_$@.bc $(OBJECTS)
+	opt -O3 -disable-inlining < basic_$@.bc > $@.bc
+	llvm-dis < $@.bc > $@.ll
+	llc -O3 -o $@.s $@.bc 
+	$(CC) -o $@ $@.s $(LDFLAGS)
+	objdump -d $@ > $@.dis
+
+
+%.bc: %${source_file_extension}
+	$(CC) $(CFLAGS) $< -o $@
+
+hm: $(OPT_OBJECTS)
+	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMHM.so -smmhm --debug-only=smmhm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
+	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).bc 
+	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
+	objdump -d $@_$(PROGRAM) > $@_$(PROGRAM).dis
+
+heap_manager.bc:$(SMMLIB)/heap_manager.c
+	$(CC) -I$(SMMLIB) -include heap_manager.h $(CFLAGS) $< -o $@
+
+opt_%.bc: %${source_file_extension}
+	$(CC) -I$(SMMLIB) -include heap_manager.h $(CFLAGS) $< -o $@
+
+callgraph:
+	opt -O3 -disable-inlining -dot-callgraph < basic_$(PROGRAM).bc
+	dot -Tgif callgraph.dot -o basic_$(PROGRAM).gif
+
+clean:
+	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.gif ${outfile} hm_$(PROGRAM)
+    """
+
+
+	# Create the linker script with SPM
+	if (not os.path.isfile("spm.ld")): 
+		with open('spm.ld', 'w') as linker_script:
+			implicit_linker_script = subprocess.Popen("ld --verbose", stdout=subprocess.PIPE, shell=True).communicate()[0].split("\n")
+			i = 0
+			while i <  range(len(implicit_linker_script)):
+		    		line = implicit_linker_script[i]
+    				while (line.find("==================================================") == -1):
+					i = i+1
+					line = implicit_linker_script[i]
+				i = i + 1
+    				line = implicit_linker_script[i]
+				while (line.find("==================================================") == -1):
+					if line.find("executable_start") != -1:
+					  	linker_script.write(line.replace("0x400000", "0x000000") + "\n  . = ALIGN(0x10);\n  _spm_begin = .;\n  . = . + 0x100000;\n  _spm_end = .;\n")
+					else:
+    						linker_script.write(line + "\n")
+					i = i+1
+					line = implicit_linker_script[i]
+				break;
+
+	# Create the makefile using the created linker script
+	if (not os.path.isfile("Makefile")): 
+		cwd = os.getcwd()
+		files = os.listdir(cwd)
+		objects = []
+		source_file_extension = ""
+		for i in range(len(files)):
+			(file, extension) = os.path.splitext(files[i])
+			if(extension == ".c" or extension == ".cpp" or extension == ".cc"):
+				objects.append(file)
+				if source_file_extension == "":
+					source_file_extension = extension
+		objects = list(set(objects))
+		original_objects = ""
+		opt_objects = ""
+	   	for i in range(len(objects)):
+			original_objects = original_objects + objects[i] + ".bc" + " "
+			opt_objects = opt_objects + "opt_" + objects[i] + ".bc" + " "
+		# Use the name of current folder as the name of generated executable file
+		program = os.path.basename(cwd)
+		with open('Makefile', 'w') as f:
+			# make + make opt
+			makefile = makefile.replace("${original_objects}", original_objects)
+			makefile = makefile.replace("${opt_objects}", opt_objects)
+			makefile = makefile.replace("${program}", program)
+			makefile = makefile.replace("${source_file_extension}", source_file_extension)
+			# make clean
+			if (outfile == ""):
+				arg_list = arguments.split()
+    				for i in range(len(arg_list)):
+					if "output" in arg_list[i]:
+						outfile = arg_list[i] 
+			if (outfile == ""):
+				makefile = makefile.replace("${outfile}", "")
+			else:
+				makefile = makefile.replace("${outfile}", outfile + " hm_" + outfile)
+			# make prof
+			makefile = makefile.replace("${arguments}", arguments)
+			if (infile != ""):
+				makefile = makefile.replace("${infile}", "< " + infile)
+			else:
+				makefile = makefile.replace("${infile}", "")
+			makefile = makefile.replace("${spm_size}", str(spmsize))
+			f.write(makefile)
+
+
+
 
 # Create a makefile for SMM global management
 def create_smm_global_makefile(arguments="", infile = "", outfile=""):
@@ -484,6 +448,171 @@ clean:
 				makefile = makefile.replace("${infile}", "")
 			f.write(makefile)
 
+# Create a makefile for SMM code management
+def create_smm_code_makefile(arguments="", infile = "", outfile="", spmsize = 256):
+	#  make file
+	makefile = """
+PROGRAM = ${program}
+
+SMMLIB=$(HOME)/Documents/smm/code/lib
+
+INCLUDEDIRS=
+INCLUDE=
+LIBDIRS=
+LIBS = -lm
+
+OBJECTS = ${original_objects}
+OPT_OBJECTS = code_manager.bc ${opt_objects}
+CC=clang
+CFLAGS = $(INCLUDEDIRS) $(INCLUDE) -emit-llvm -c -O3 -fno-inline
+LDFLAGS = $(LIBDIRS) $(LIBS) -static
+
+all: $(PROGRAM)
+
+$(PROGRAM): $(OBJECTS)
+	llvm-link -o basic_$@.bc $(OBJECTS)
+	opt -O3 -disable-inlining < basic_$@.bc > $@.bc
+	llvm-dis < $@.bc > $@.ll
+	llc -O3 -o $@.s $@.bc 
+	$(CC) -o $@ $@.s $(LDFLAGS)
+	objdump -d $@ > $@.dis
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCM.so -smmcm-helper --debug-only=smmcm-helper < $@.bc > /dev/null
+	smmcode-size 
+	-rm _func_names
+
+
+%.bc: %${source_file_extension}
+	$(CC) $(CFLAGS) $< -o $@
+
+cm: $(OPT_OBJECTS)
+	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCM.so -smmcm-exec --debug-only=smmcm-exec < $@_raw_$(PROGRAM).bc > /dev/null
+	smmcode-mapping 
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCM.so -smmcm --debug-only=smmcm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
+	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).bc 
+	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
+	objdump -d $@_$(PROGRAM) > $@_$(PROGRAM).dis
+
+code_manager.bc:$(SMMLIB)/code_manager.c
+	$(CC) -I$(SMMLIB) -include code_manager.h $(CFLAGS) $< -o $@
+
+opt_%.bc: %${source_file_extension}
+	$(CC) -I$(SMMLIB) -include code_manager.h $(CFLAGS) $< -o $@
+
+callgraph:
+	opt -O3 -disable-inlining -dot-callgraph < basic_$(PROGRAM).bc
+	dot -Tgif callgraph.dot -o basic_$(PROGRAM).gif
+
+clean:
+	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.gif ${outfile} cm_$(PROGRAM) _func_size _exec_trace _mapping
+    """
+
+
+	# Create the overlay of sections in the linker script from mapping file
+	overlay_script = []
+	overlays = dict()
+	with open("_mapping") as f:
+		numSec = int(f.readline())
+		for i in range(numSec):
+			overlays[i] = {"functions": []}
+
+		for line in f:
+			line = line.strip()
+    			if line == "":
+				continue;
+ 			tokens = line.split(" ")
+   			func = tokens[0]
+   			sec = int(tokens[1])
+			#print func, " ", sec
+   			overlays[sec]['functions'].append(func)
+
+	last_func = ""
+	overlay_script.append("\n  . = _spm_begin;\n")
+	for i in range(len(overlays)):
+		overlay = overlays[i]
+		if i == 0:
+			overlay_script.append("  OVERLAY ALIGN(0x10) : AT (_spm_end) {\n")
+		else:
+			overlay_script.append("  OVERLAY ALIGN(0x10) : {\n")
+		for func in overlay["functions"]:
+			last_func = func
+			overlay_script.append("  .%s { *.(%s) }\n" % (func, func))
+		overlay_script.append("  }\n")
+	overlay_script.append("  . = LOADADDR(.%s) + SIZEOF(.%s);\n" % (last_func, last_func));
+	overlay_script.append("  _realign_addr = ALIGN(0x10);\n");
+	overlay_script.append("  .realign _realign_addr : AT (_realign_addr) { FILL(0x0) QUAD(0x0) QUAD(0x0) }\n\n");
+
+	# Create the linker script with SPM
+	if (not os.path.isfile("spm.ld")): 
+		with open('spm.ld', 'w') as linker_script:
+			implicit_linker_script = subprocess.Popen("ld --verbose", stdout=subprocess.PIPE, shell=True).communicate()[0].split("\n")
+			i = 0
+			while i <  range(len(implicit_linker_script)):
+		    		line = implicit_linker_script[i]
+    				while (line.find("==================================================") == -1):
+					i = i+1
+					line = implicit_linker_script[i]
+				i = i + 1
+    				line = implicit_linker_script[i]
+				while (line.find("==================================================") == -1):
+					if line.find("executable_start") != -1:
+					  	linker_script.write(line.replace("0x400000", "0x000000") + "\n  . = ALIGN(0x10);\n  _spm_begin = .;\n  . = . + 0x100000;\n  _spm_end = .;\n")
+						linker_script.writelines(overlay_script)
+					else:
+    						linker_script.write(line + "\n")
+					i = i+1
+					line = implicit_linker_script[i]
+				break;
+
+	# Create the makefile using the created linker script
+	if (not os.path.isfile("Makefile")): 
+		cwd = os.getcwd()
+		files = os.listdir(cwd)
+		objects = []
+		source_file_extension = ""
+		for i in range(len(files)):
+			(file, extension) = os.path.splitext(files[i])
+			if(extension == ".c" or extension == ".cpp" or extension == ".cc"):
+				objects.append(file)
+				if source_file_extension == "":
+					source_file_extension = extension
+		objects = list(set(objects))
+		original_objects = ""
+		opt_objects = ""
+#		prof_objects = ""
+	   	for i in range(len(objects)):
+			original_objects = original_objects + objects[i] + ".bc" + " "
+			opt_objects = opt_objects + "opt_" + objects[i] + ".bc" + " "
+#			prof_objects = prof_objects + "prof_" + objects[i] + ".bc" + " "
+		# Use the name of current folder as the name of generated executable file
+		program = os.path.basename(cwd)
+		with open('Makefile', 'w') as f:
+			# make + make opt
+			makefile = makefile.replace("${original_objects}", original_objects)
+			makefile = makefile.replace("${opt_objects}", opt_objects)
+#			makefile = makefile.replace("${prof_objects}", prof_objects)
+			makefile = makefile.replace("${program}", program)
+			makefile = makefile.replace("${source_file_extension}", source_file_extension)
+			# make clean
+			if (outfile == ""):
+				arg_list = arguments.split()
+    				for i in range(len(arg_list)):
+					if "output" in arg_list[i]:
+						outfile = arg_list[i] 
+			if (outfile == ""):
+				makefile = makefile.replace("${outfile}", "")
+			else:
+				makefile = makefile.replace("${outfile}", outfile + " cm_" + outfile)
+			# make prof
+			makefile = makefile.replace("${arguments}", arguments)
+			if (infile != ""):
+				makefile = makefile.replace("${infile}", "< " + infile)
+			else:
+				makefile = makefile.replace("${infile}", "")
+			makefile = makefile.replace("${spm_size}", str(spmsize))
+			f.write(makefile)
+
 
 
 
@@ -596,7 +725,7 @@ def create_cache_runme(dsize = "", arguments="", infile="", outfile=""):
 # Get options
 if __name__ == "__main__":
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "-h", ["help", "configure-cache", "configure-code", "configure-stack", "configure-global", "spm-size=", "args=", "input=", "output=", "clean", "l1d_size="]) 
+		opts, args = getopt.getopt(sys.argv[1:], "-h", ["help", "configure-cache", "configure-heap", "configure-stack", "configure-global", "configure-code", "spm-size=", "args=", "input=", "output=", "clean", "l1d_size="]) 
 	except getopt.GetoptError as err:
 		print str(err)
 		sys.exit(2)
@@ -608,16 +737,18 @@ if __name__ == "__main__":
 	dsize = ""
 	for opt, arg in opts:
 		if opt in ("-h", "--help"):
-			print 'smmmake --configure-code --configure-stack --configure-global --spm-size --configure-cache --args --input --output --clean'
+			print 'smmmake --configure-stack --configure-heap --configure-global --configure-code --spm-size --configure-cache --args --input --output --clean'
 			sys.exit()
 		elif opt in ("--configure-cache"):
 			config = 1
-		elif opt in ("--configure-code"):
-			config = 2
 		elif opt in ("--configure-stack"):
+			config = 2
+		elif opt in ("--configure-heap"):
 			config = 3
 		elif opt in ("--configure-global"):
 			config = 4
+		elif opt in ("--configure-code"):
+			config = 5
 		elif opt in ("--args"):
 			arguments = arg
 		elif opt in ("--input"):
@@ -645,12 +776,15 @@ if __name__ == "__main__":
 	if config == 1:
 		create_cache_makefile(outfile)
 		create_cache_runme(dsize, arguments, infile, outfile)
-    	if config == 2:
-		create_smm_code_makefile(arguments, infile, outfile, spmsize)
+	if config == 2:
+		create_smm_stack_makefile(arguments, infile, outfile, spmsize)
 		create_smm_runme(arguments, infile, outfile)
 	if config == 3:
-		create_smm_stack_makefile(arguments, infile, outfile, spmsize)
+		create_smm_heap_makefile(arguments, infile, outfile, spmsize)
 		create_smm_runme(arguments, infile, outfile)
 	if config == 4:
 		create_smm_global_makefile(arguments, infile, outfile)
+		create_smm_runme(arguments, infile, outfile)
+    	if config == 5:
+		create_smm_code_makefile(arguments, infile, outfile, spmsize)
 		create_smm_runme(arguments, infile, outfile)
