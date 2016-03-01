@@ -350,6 +350,8 @@ unsigned long CostCalculator::mergeCost(Region *r1, Region *r2) {
 
     // Step 4: Remove redundant adjacent functions calls
     current = dumbNode->getSuccessor();
+    if (!current)
+	return 0;
     next = current->getSuccessor();
     while(next) {
 	if(current->function == next->function) 
@@ -362,6 +364,8 @@ unsigned long CostCalculator::mergeCost(Region *r1, Region *r2) {
     //CostCalculator::printGraph(dumbNode->next);
     // Remove self-recursive back edges 
     current = dumbNode;
+    if (!current)
+	return 0;
     next = current->getSuccessor();
     while(next) {
 	bool changed = false;
@@ -400,6 +404,8 @@ unsigned long CostCalculator::mergeCost(Region *r1, Region *r2) {
     //Step 5: Calculate the cost
 
     current = dumbNode;
+    if (!current)
+	return 0;
     while(current->next) {
 	next = current->next;
 	Function *function = next->function;

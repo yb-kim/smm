@@ -308,11 +308,10 @@ down by an amount equal to the value of the pixel pointed to by p,
      typedef  unsigned char uchar;
      typedef  struct {int x,y,info, dx, dy, I;} CORNER_LIST[MAX_CORNERS];
 
-
      /* }}} */
      /* {{{ usage() */
 
-usage()
+void usage()
 {
     printf("Usage: susan <in.pgm> <out.pgm> [options]\n\n");
 
@@ -411,7 +410,7 @@ void get_image(filename,in,x_size,y_size)
 /* }}} */
 /* {{{ put_image(filename,in,x_size,y_size) */
 
-put_image(filename,in,x_size,y_size)
+void put_image(filename,in,x_size,y_size)
     char filename [100],
     *in;
 int  x_size,
@@ -439,7 +438,7 @@ int  x_size,
 /* }}} */
 /* {{{ int_to_uchar(r,in,size) */
 
-int_to_uchar(r,in,size)
+void int_to_uchar(r,in,size)
     uchar *in;
     int   *r, size;
 {
@@ -492,7 +491,7 @@ void setup_brightness_lut(bp,thresh,form)
 
 /* {{{ susan_principle(in,r,bp,max_no,x_size,y_size) */
 
-susan_principle(in,r,bp,max_no,x_size,y_size)
+void susan_principle(in,r,bp,max_no,x_size,y_size)
     uchar *in, *bp;
     int   *r, max_no, x_size, y_size;
 {
@@ -566,7 +565,7 @@ susan_principle(in,r,bp,max_no,x_size,y_size)
 /* }}} */
 /* {{{ susan_principle_small(in,r,bp,max_no,x_size,y_size) */
 
-susan_principle_small(in,r,bp,max_no,x_size,y_size)
+void susan_principle_small(in,r,bp,max_no,x_size,y_size)
     uchar *in, *bp;
     int   *r, max_no, x_size, y_size;
 {
@@ -640,7 +639,7 @@ uchar median(in,i,j,x_size)
 
 /* this enlarges "in" so that borders can be dealt with easily */
 
-enlarge(in,tmp_image,x_size,y_size,border)
+void enlarge(in,tmp_image,x_size,y_size,border)
     uchar **in;
     uchar *tmp_image;
     int   *x_size, *y_size, border;
@@ -694,7 +693,7 @@ void susan_smoothing(three_by_three,in,dt,x_size,y_size,bp)
     else
 	mask_size = 1;
 
-    total=0.1; /* test for total's type */
+    total=(TOTAL_TYPE)0.1; /* test for total's type */
     if ( (dt>15) && (total==0) )
     {
 	printf("Distance_thresh (%f) too big for integer arithmetic.\n",dt);
@@ -812,7 +811,7 @@ void susan_smoothing(three_by_three,in,dt,x_size,y_size,bp)
 
 /* {{{ edge_draw(in,corner_list,drawing_mode) */
 
-edge_draw(in,mid,x_size,y_size,drawing_mode)
+void edge_draw(in,mid,x_size,y_size,drawing_mode)
     uchar *in, *mid;
     int x_size, y_size, drawing_mode;
 {
@@ -828,9 +827,19 @@ edge_draw(in,mid,x_size,y_size,drawing_mode)
 	    if (*midp<8) 
 	    {
 		inp = in + (midp - mid) - x_size - 1;
-		*inp++=255; *inp++=255; *inp=255; inp+=x_size-2;
-		*inp++=255; *inp++;     *inp=255; inp+=x_size-2;
-		*inp++=255; *inp++=255; *inp=255;
+		*inp++=255; 
+		*inp++=255; 
+		*inp=255; 
+		inp+=x_size-2;
+
+		*inp++=255; 
+		*inp++;     
+		*inp=255; 
+		inp+=x_size-2;
+
+		*inp++=255; 
+		*inp++=255; 
+		*inp=255;
 	    }
 	    midp++;
 	}
@@ -852,7 +861,7 @@ edge_draw(in,mid,x_size,y_size,drawing_mode)
 /* only one pass is needed as i,j are decremented if necessary to go
    back and do bits again */
 
-susan_thin(r,mid,x_size,y_size)
+void susan_thin(r,mid,x_size,y_size)
     uchar *mid;
     int   *r, x_size, y_size;
 {
@@ -1062,7 +1071,7 @@ O O O              0 2 3     */
 /* }}} */
 /* {{{ susan_edges(in,r,sf,max_no,out) */
 
-susan_edges(in,r,mid,bp,max_no,x_size,y_size)
+void susan_edges(in,r,mid,bp,max_no,x_size,y_size)
     uchar *in, *bp, *mid;
     int   *r, max_no, x_size, y_size;
 {
@@ -1299,7 +1308,7 @@ susan_edges(in,r,mid,bp,max_no,x_size,y_size)
 /* }}} */
 /* {{{ susan_edges_small(in,r,sf,max_no,out) */
 
-susan_edges_small(in,r,mid,bp,max_no,x_size,y_size)
+void susan_edges_small(in,r,mid,bp,max_no,x_size,y_size)
     uchar *in, *bp, *mid;
     int   *r, max_no, x_size, y_size;
 {
@@ -1432,7 +1441,7 @@ susan_edges_small(in,r,mid,bp,max_no,x_size,y_size)
 
 /* {{{ corner_draw(in,corner_list,drawing_mode) */
 
-corner_draw(in,corner_list,x_size,drawing_mode)
+void corner_draw(in,corner_list,x_size,drawing_mode)
     uchar *in;
     CORNER_LIST corner_list;
     int x_size, drawing_mode;
@@ -1462,7 +1471,7 @@ corner_draw(in,corner_list,x_size,drawing_mode)
 /* }}} */
 /* {{{ susan(in,r,sf,max_no,corner_list) */
 
-susan_corners(in,r,bp,max_no,corner_list,x_size,y_size)
+void susan_corners(in,r,bp,max_no,corner_list,x_size,y_size)
     uchar       *in, *bp;
     int         *r, max_no, x_size, y_size;
     CORNER_LIST corner_list;
@@ -1745,7 +1754,7 @@ susan_corners(in,r,bp,max_no,corner_list,x_size,y_size)
 /* }}} */
 /* {{{ susan_quick(in,r,sf,max_no,corner_list) */
 
-susan_corners_quick(in,r,bp,max_no,corner_list,x_size,y_size)
+void susan_corners_quick(in,r,bp,max_no,corner_list,x_size,y_size)
     uchar       *in, *bp;
     int         *r, max_no, x_size, y_size;
     CORNER_LIST corner_list;
@@ -1960,7 +1969,7 @@ susan_corners_quick(in,r,bp,max_no,corner_list,x_size,y_size)
 /* }}} */
 /* {{{ main(argc, argv) */
 
-main(argc, argv)
+int main(argc, argv)
     int   argc;
     char  *argv [];
 {
@@ -2117,8 +2126,8 @@ main(argc, argv)
 
     /* }}} */
 
-    put_image(argv[2],in,x_size,y_size);
-
+    put_image(argv[2],(char *)in,x_size,y_size);
+    return 0;
 }
 
 /* }}} */
