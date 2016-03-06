@@ -476,11 +476,19 @@ $(PROGRAM): $(OBJECTS)
 	llc -O3 -o $@.s $@.bc 
 	$(CC) -o $@ $@.s $(LDFLAGS)
 	objdump -d $@ > $@.dis
+
+
+cmh:
 	# Get user functions names
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCMH.so -smmcmh-funcinfo --debug-only=smmcm-helper < $@.bc > /dev/null
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCMH.so -smmcmh-funcinfo --debug-only=smmcm-helper < $(PROGRAM).bc > /dev/null
 	# Get user functions code sizes
 	smmcode-size
 	-rm _func_names
+	# Get code overlay scheme
+	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCMH.so -smmcmh-overlay -spm-size ${spm_size} < $(PROGRAM).bc > /dev/null
+	# Get the linker script based on overlay scheme
+	smmmake --configure-code-linkerscript
+
 
 
 %.bc: %${source_file_extension}
@@ -488,12 +496,6 @@ $(PROGRAM): $(OBJECTS)
 
 cm: $(OPT_OBJECTS)
 	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
-	# Get execution trace
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCMH.so -smmcmh-exec --debug-only=smmcmh-exec < $@_raw_$(PROGRAM).bc > /dev/null
-	# Get code overlay scheme
-	smmcode-mapping ${spm_size}
-	# Get the linker script based on overlay scheme
-	smmmake --configure-code-linkerscript
 	# Insert code management functions
 	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCM.so -smmcm --debug-only=smmcm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
@@ -503,12 +505,6 @@ cm: $(OPT_OBJECTS)
 
 ecm: $(OPT_OBJECTS)
 	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
-	# Get execution trace
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCMH.so -smmcmh-exec --debug-only=smmcmh-exec < $@_raw_$(PROGRAM).bc > /dev/null
-	# Get code overlay scheme
-	smmcode-mapping ${spm_size}
-	# Get the linker script based on overlay scheme
-	smmmake --configure-code-linkerscript
 	# Insert code management functions based on code overlay scheme
 	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMECM.so -smmecm --debug-only=smmecm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
@@ -527,7 +523,7 @@ callgraph:
 	dot -Tgif callgraph.dot -o basic_$(PROGRAM).gif
 
 clean:
-	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.gif ${outfile} cm_$(PROGRAM) ecm_$(PROGRAM) _func_size _exec_trace _mapping spm.ld
+	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.gif ${outfile} cm_$(PROGRAM) ecm_$(PROGRAM) _func_size _exec_trace _mapping
     """
 
 
