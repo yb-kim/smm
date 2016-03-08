@@ -75,12 +75,18 @@ char * _g2l(char *gaddr, unsigned long size) {
     if (_stack_depth == 0) {
 	if (gaddr >= _mem_stack_base - (_spm_stack_base - sp) && gaddr < _mem_stack_base) {
 	    laddr = _spm_stack_base - (_mem_stack_base - gaddr);
+	}
+	else {
 	    dma((void *)buf1, (void *)gaddr, size, MEM2SPM);
+	    //laddr = buf1;
 	}
     } else {
 	if (gaddr >= _stack[_stack_depth-1].mem_addr - (_spm_stack_base - sp) && gaddr < _stack[_stack_depth-1].mem_addr) {
 	    laddr = _spm_stack_base - (_stack[_stack_depth-1].mem_addr - gaddr);
+	}
+	else {
 	    dma((void *)buf1, (void *)gaddr, size, MEM2SPM);
+	    //laddr = buf1;
 	}
     }
 
@@ -92,10 +98,16 @@ void _ptr_wr(char *gaddr, unsigned long size) {
     sp += 0x8; // offset the displacement of stack pointer caused by _g2l function (not needed if compilers inline this function)
     if (_stack_depth == 0) {
 	if (gaddr >= _mem_stack_base - (_spm_stack_base - sp) && gaddr < _mem_stack_base) {
+	    laddr = _spm_stack_base - (_mem_stack_base - gaddr);
+	} else {
+	    // TODO writes to the main memory
 	    dma((void *)buf1, (void *)buf2, size, SPM2MEM);
 	}
     } else {
 	if (gaddr >= _stack[_stack_depth-1].mem_addr - (_spm_stack_base - sp) && gaddr < _stack[_stack_depth-1].mem_addr) {
+	    laddr = _spm_stack_base - (_stack[_stack_depth-1].mem_addr - gaddr);
+	} else {
+	    // TODO writes to the main memory
 	    dma((void *)buf1, (void *)buf2, size, SPM2MEM);
 	}
     }
