@@ -8,7 +8,7 @@ for path in os.listdir(cwd):
 	if os.path.isdir(path):
 		directories.append(path)
 #directories = [ 'stringsearch']
-#directories.remove('patricia')
+directories.remove('patricia')
 print directories
 
 for directory in directories:

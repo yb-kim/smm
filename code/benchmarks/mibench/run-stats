@@ -6,7 +6,8 @@ import openpyxl
 r = 0
 
 def getStatsHelper(ws, progName, expType, CMType):
-    	print r
+#    	print progName + ' ' + expType + ' ' + CMType
+#    	print r
 	c = 1
 	ws.cell(row = r, column = c).value = progName
     	c = c+1
@@ -39,6 +40,21 @@ def getStatsHelper(ws, progName, expType, CMType):
     	c = c+1
 
 	ws.cell(row = r, column = c).value = numInsts*TPI + numDMA*startupCost + DMASize*transferTimePerByte
+	c = c + 1
+
+	output = subprocess.Popen("grep num_func_calls_cget m5out/"+expType+"/"+CMType+"/stats.txt", stdout=subprocess.PIPE, shell=True).communicate()[0]
+	tempList = output.split()
+	numCalls_cget = float(tempList[1])
+	ws.cell(row = r, column = c).value = numCalls_cget
+    	c = c+1
+
+	output = subprocess.Popen("grep num_insts_cget m5out/"+expType+"/"+CMType+"/stats.txt", stdout=subprocess.PIPE, shell=True).communicate()[0]
+	tempList = output.split()
+	numInsts_cget = float(tempList[1])
+	ws.cell(row = r, column = c).value = numInsts_cget
+    	c = c+1
+
+
 
 
 def getStats(expType):
@@ -59,12 +75,16 @@ def getStats(expType):
 	ws2['C1'] = "DMA Size"
 	ws2['D1'] = "Number of Instructions"
 	ws2['E1'] = "Execution Time"
+	ws2['F1'] = "Number of Calls of cget"
+	ws2['G1'] = "Number of Instructions Executed of cget"
 
 	ws3['A1'] = "Benchmarks"
 	ws3['B1'] = "Number of DMA"
 	ws3['C1'] = "DMA Size"
 	ws3['D1'] = "Number of Instructions"
 	ws3['E1'] = "Execution Time"
+	ws3['F1'] = "Number of Calls of cget"
+	ws3['G1'] = "Number of Instructions Executed of cget"
 
 
 	root = os.getcwd()
@@ -73,7 +93,7 @@ def getStats(expType):
 		if os.path.isdir(path):
 			directories.append(path)
 #	directories = ['stringsearch','test2']
-#	directories.remove('patricia')
+	directories.remove('patricia')
 	print directories
 
 
@@ -81,7 +101,7 @@ def getStats(expType):
 	r = 2
 	for directory in directories:
 		os.chdir(directory)
-#		print directory
+		print directory
 		getStatsHelper(ws1, directory, expType, "smm");
 		getStatsHelper(ws2, directory, expType, "smmcm");
 		getStatsHelper(ws3, directory, expType, "smmecm");
