@@ -646,9 +646,9 @@ def create_smm_code_runme(arguments="", infile = "", outfile=""):
 	if (not os.path.isfile("runme")):
 		with open("runme", "w") as f:
 			prolog = "#!/bin/sh\nWORK=$HOME\nSIMDIR=$WORK/Applications/gem5"
-			text = "$SIMDIR/build/X86/gem5.debug -q -r -d m5out/smm $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + program
-			cm_text = "$SIMDIR/build/X86/gem5.debug -q -r -d m5out/smmcm $SIMDIR/configs/example/se.py --cpu-type=atomic -c cm_" + program
-			ecm_text = "$SIMDIR/build/X86/gem5.debug -q -r -d m5out/smmecm $SIMDIR/configs/example/se.py --cpu-type=atomic -c ecm_" + program
+			text = "$SIMDIR/build/X86/gem5.opt -q -r -d m5out/smm $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + program
+			cm_text = "$SIMDIR/build/X86/gem5.opt -q -r -d m5out/smmcm $SIMDIR/configs/example/se.py --cpu-type=atomic -c cm_" + program
+			ecm_text = "$SIMDIR/build/X86/gem5.opt -q -r -d m5out/smmecm $SIMDIR/configs/example/se.py --cpu-type=atomic -c ecm_" + program
 			if (arguments != ""):
 				text = text + " -o \"" + arguments + "\""
 				cm_text = cm_text + " -o \"" + arguments.replace("output", "cm_output", 1) + "\""
@@ -796,8 +796,8 @@ if __name__ == "__main__":
     				subprocess.Popen("rm runmeonce", stdout=subprocess.PIPE, shell=True)
 			if (os.path.isfile("runme")):
     				subprocess.Popen("rm runme", stdout=subprocess.PIPE, shell=True)
-			if (os.path.isdir("m5out")):
-    				subprocess.Popen("rm -r m5out", stdout=subprocess.PIPE, shell=True)
+#			if (os.path.isdir("m5out")):
+#    				subprocess.Popen("rm -r m5out", stdout=subprocess.PIPE, shell=True)
 		elif opt in ("--l1d_size"):
 		      	dsize = arg
 		else:
