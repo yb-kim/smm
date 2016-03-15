@@ -523,7 +523,7 @@ callgraph:
 	dot -Tgif callgraph.dot -o basic_$(PROGRAM).gif
 
 clean:
-	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.gif ${outfile} cm_$(PROGRAM) ecm_$(PROGRAM) _func_size _exec_trace _mapping
+	-rm -rf  $(PROGRAM) *.bc *.ll *.s *.dis *.dot *.gif ${outfile} cm_$(PROGRAM) ecm_$(PROGRAM) _func_size 
     """
 
 
