@@ -7,7 +7,7 @@ directories = []
 for path in os.listdir(cwd):
 	if os.path.isdir(path):
 		directories.append(path)
-#directories = [ 'patricia', 'susan.smoothings']
+#directories = [ 'stringsearch']
 #directories.remove('patricia')
 print directories
 
@@ -15,7 +15,9 @@ for directory in directories:
 	os.chdir(directory)
 	print directory
 	command = ""
-	command = command + " ./configure-smm; make; make cm; ./runme;"
+	command = command + " make clean; smmmake --clean; ./configure-smm-min; make; make cmh; make cm; make ecm; ./runme;  mkdir m5out/min; mv m5out/smm m5out/smmcm m5out/smmecm m5out/min;"
+	command = command + " make clean; smmmake --clean; ./configure-smm-mid; make; make cmh; make cm; make ecm; ./runme;  mkdir m5out/mid; mv m5out/smm m5out/smmcm m5out/smmecm m5out/mid;"
+	command = command + " make clean; smmmake --clean; ./configure-smm-max; make; make cmh; make cm; make ecm; ./runme;  mkdir m5out/max; mv m5out/smm m5out/smmcm m5out/smmecm m5out/max;"
 	subprocess.call(command, shell=True)
 	os.chdir(cwd)
     	

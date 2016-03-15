@@ -31,12 +31,16 @@
  * Private function used to return whether
  * or not bit 'i' is set in 'key'.
  */
+/*
 static __inline
 unsigned long
 bit(int i, unsigned long key)
 {
 	return key & (1 << (31-i));
 }
+*/
+
+#define bit(i, key) (key & (1 << (31-i)))
 
 
 /*
