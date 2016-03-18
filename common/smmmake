@@ -14,7 +14,7 @@ def create_smm_stack_makefile(arguments="", infile = "", outfile="", spmsize = 2
 	makefile = """
 PROGRAM = ${program}
 
-SMMLIB=$(HOME)/Documents/smm/stack/lib
+SMMLIB=$(HOME)/workspace/spm_code_management/smm/stack/lib
 
 INCLUDEDIRS=
 INCLUDE=
@@ -44,7 +44,7 @@ $(PROGRAM): $(OBJECTS)
 
 ssm: $(OPT_OBJECTS)
 	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSSM.so -smmssm --debug-only=smmssm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMSSM.so -smmssm --debug-only=smmssm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
 	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).bc 
 	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
@@ -52,7 +52,7 @@ ssm: $(OPT_OBJECTS)
 
 esm: $(OPT_OBJECTS)
 	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMESM.so -smmesm --debug-only=smmesm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMESM.so -smmesm --debug-only=smmesm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
 	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).bc 
 	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
@@ -66,12 +66,12 @@ opt_%.bc: %${source_file_extension}
 
 ssm-prof: $(PROF_OBJECTS)
 	llvm-link -o $@_raw_$(PROGRAM).bc $(PROF_OBJECTS)
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSSM.so -smmsmh < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMSSM.so -smmsmh < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
 	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).ll 
 	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS)
 	./$@_$(PROGRAM) ${arguments} ${infile} > /dev/null
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSSM.so -smmsmh < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMSSM.so -smmsmh < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	mkdir ssm-wcg
 	mv wcg_nodes.txt wcg_paths.txt ssm-wcg
     	
@@ -83,7 +83,7 @@ esm-prof: $(PROF_OBJECTS)
 	./runmeonce
     	# Print the stack frame sizes of the user functions into wcg_nodes.txt and print the names of the library functions into lib_funcs.txt
 	llvm-link -o $@_raw_$(PROGRAM).bc $(PROF_OBJECTS)
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSSM.so -smmsmh < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMSSM.so -smmsmh < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
 	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).ll 
 	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS)
@@ -91,7 +91,7 @@ esm-prof: $(PROF_OBJECTS)
 	# Get the stack frame sizes of the library functions listed in lib_funcs.txt and add them to wcg_nodes.txt
 	smmstack-libfunc
 	# Get the call paths and save the result in wcg_paths.txt, based on wcg_nodes.txt
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSSM.so -smmsmh < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMSSM.so -smmsmh < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	mkdir esm-wcg
 	mv wcg_nodes.txt wcg_paths.txt esm-wcg
 	
@@ -191,7 +191,7 @@ def create_smm_heap_makefile(arguments="", infile = "", outfile="", spmsize = 25
 	makefile = """
 PROGRAM = ${program}
 
-SMMLIB=$(HOME)/Documents/smm/heap/lib
+SMMLIB=$(HOME)/workspace/spm_code_management/smm/heap/lib
 
 INCLUDEDIRS=
 INCLUDE=
@@ -220,7 +220,7 @@ $(PROGRAM): $(OBJECTS)
 
 hm: $(OPT_OBJECTS)
 	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMHM.so -smmhm --debug-only=smmhm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMSMMHM.so -smmhm --debug-only=smmhm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
 	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).bc 
 	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
@@ -316,7 +316,7 @@ def create_smm_global_makefile(arguments="", infile = "", outfile=""):
 	makefile = """
 PROGRAM = ${program}
 WORK=$(HOME)
-SMMLIB=$(WORK)/Documents/smm/global/lib
+SMMLIB=$(WORK)/workspace/spm_code_management/smm/global/lib
 
 INCLUDEDIRS=
 INCLUDE=
@@ -343,7 +343,7 @@ $(PROGRAM): $(OBJECTS)
 
 gm: $(OPT_OBJECTS)
 	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
-	opt -load $(WORK)/Applications/llvm/build/Debug+Asserts/lib/LLVMGM.so -smmgm -debug-only=smmgm < $@_raw_$(PROGRAM).bc > $@_prep_$(PROGRAM).bc
+	opt -load $(WORK)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMGM.so -smmgm -debug-only=smmgm < $@_raw_$(PROGRAM).bc > $@_prep_$(PROGRAM).bc
 	opt -O3 --disable-loop-vectorization  -disable-loop-unrolling < $@_prep_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
 	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).ll
@@ -352,7 +352,7 @@ gm: $(OPT_OBJECTS)
 
 egm: $(OPT_OBJECTS)
 	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
-	opt -load $(WORK)/Applications/llvm/build/Debug+Asserts/lib/LLVMEGM.so -smmegm -debug-only=smmegm < $@_raw_$(PROGRAM).bc > $@_prep_$(PROGRAM).bc
+	opt -load $(WORK)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMEGM.so -smmegm -debug-only=smmegm < $@_raw_$(PROGRAM).bc > $@_prep_$(PROGRAM).bc
 	opt -O3 --disable-loop-vectorization  -disable-loop-unrolling < $@_prep_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
 	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).ll
@@ -454,7 +454,7 @@ def create_smm_code_makefile(arguments="", infile = "", outfile="", spmsize = 25
 	makefile = """
 PROGRAM = ${program}
 
-SMMLIB=$(HOME)/Documents/smm/code/lib
+SMMLIB=$(HOME)/workspace/spm_code_management/smm/code/lib
 
 INCLUDEDIRS=
 INCLUDE=
@@ -480,12 +480,12 @@ $(PROGRAM): $(OBJECTS)
 
 cmh:
 	# Get user functions names
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCMH.so -smmcmh-funcinfo --debug-only=smmcm-helper < $(PROGRAM).bc > /dev/null
+	opt -O3 -disable-inlining -load $(HOME)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMSMMCMH.so -smmcmh-funcinfo --debug-only=smmcm-helper < $(PROGRAM).bc > /dev/null
 	# Get user functions code sizes
 	smmcode-size
 	-rm _func_names
 	# Get code overlay scheme
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCMH.so -smmcmh-overlay -spm-size ${spm_size} < $(PROGRAM).bc > /dev/null
+	opt -O3 -disable-inlining -load $(HOME)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMSMMCMH.so -smmcmh-overlay -spm-size ${spm_size} < $(PROGRAM).bc > /dev/null
 	# Get the linker script based on overlay scheme
 	smmmake --configure-code-linkerscript
 
@@ -497,7 +497,7 @@ cmh:
 cm: $(OPT_OBJECTS)
 	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
 	# Insert code management functions
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMCM.so -smmcm --debug-only=smmcm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMSMMCM.so -smmcm --debug-only=smmcm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
 	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).bc 
 	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
@@ -506,7 +506,7 @@ cm: $(OPT_OBJECTS)
 ecm: $(OPT_OBJECTS)
 	llvm-link -o $@_raw_$(PROGRAM).bc $(OPT_OBJECTS)
 	# Insert code management functions based on code overlay scheme
-	opt -O3 -disable-inlining -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMSMMECM.so -smmecm --debug-only=smmecm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
+	opt -O3 -disable-inlining -load $(HOME)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMSMMECM.so -smmecm --debug-only=smmecm < $@_raw_$(PROGRAM).bc > $@_$(PROGRAM).bc
 	llvm-dis < $@_$(PROGRAM).bc > $@_$(PROGRAM).ll
 	llc -O3 -o $@_$(PROGRAM).s $@_$(PROGRAM).bc 
 	$(CC) -o $@_$(PROGRAM) $@_$(PROGRAM).s $(LDFLAGS) -Wl,-T,spm.ld
@@ -645,7 +645,7 @@ def create_smm_code_runme(arguments="", infile = "", outfile=""):
 	# Create a runme file 
 	if (not os.path.isfile("runme")):
 		with open("runme", "w") as f:
-			prolog = "#!/bin/sh\nWORK=$HOME\nSIMDIR=$WORK/Applications/gem5"
+			prolog = "#!/bin/sh\nWORK=$HOME/workspace/spm_code_management\nSIMDIR=$WORK/smm_gem5"
 			text = "$SIMDIR/build/X86/gem5.debug -q -r -d m5out/smm $SIMDIR/configs/example/se.py --cpu-type=atomic -c " + program
 			cm_text = "$SIMDIR/build/X86/gem5.debug -q -r -d m5out/smmcm $SIMDIR/configs/example/se.py --cpu-type=atomic -c cm_" + program
 			ecm_text = "$SIMDIR/build/X86/gem5.debug -q -r -d m5out/smmecm $SIMDIR/configs/example/se.py --cpu-type=atomic -c ecm_" + program
@@ -687,7 +687,7 @@ all: $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
 	llvm-link -o basic_$@.bc $(OBJECTS)
-	opt -O3 -load $(HOME)/Applications/llvm/build/Debug+Asserts/lib/LLVMTest.so -test-cg < basic_$@.bc > $@.bc
+	opt -O3 -load $(HOME)/workspace/spm_code_management/smm_llvm_build/Debug+Asserts/lib/LLVMTest.so -test-cg < basic_$@.bc > $@.bc
 	#opt -O3 -disable-inlining < basic_$@.bc > $@.bc
 	llvm-dis < $@.bc > $@.ll
 	llc -O3 -o $@.s $@.bc

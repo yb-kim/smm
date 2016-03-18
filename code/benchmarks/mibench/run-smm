@@ -5,17 +5,20 @@ import subprocess
 cwd = os.getcwd()
 directories = []
 for path in os.listdir(cwd):
-	if os.path.isdir(path):
-		directories.append(path)
+    if os.path.isdir(path):
+        directories.append(path)
 #directories = [ 'patricia', 'susan.smoothings']
 #directories.remove('patricia')
 print directories
 
 for directory in directories:
-	os.chdir(directory)
-	print directory
-	command = ""
-	command = command + " ./configure-smm; make; make cm; ./runme;"
-	subprocess.call(command, shell=True)
-	os.chdir(cwd)
-    	
+    if directory in ["dijkstra", "patricia"]:
+        continue
+    os.chdir(directory)
+    print directory
+    command = ""
+    #command = command + " ./configure-smm; make; make cmh; make cm; ./runme;"
+    command = command + " ./configure-smm; make; make cmh;"
+    subprocess.call(command, shell=True)
+    os.chdir(cwd)
+
