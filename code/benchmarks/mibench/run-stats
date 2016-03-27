@@ -2,6 +2,7 @@
 import os
 import subprocess
 import openpyxl 
+import datetime
 
 r = 0
 
@@ -256,6 +257,13 @@ startupCost = 91
 transferTimePerByte = 0.075
 #getStats("min")
 #getStats("mid")
-getStats("50")
+#getStats("50")
 
-
+rootdir = "/home/ybkim/dropbox/2016_ESWEEK/stats"
+dirName = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+subprocess.call("mkdir %s/%s" % (rootdir, dirName), shell=True)
+for i in range(10, 110, 10):
+    getStats("%s" % i)
+    subprocess.call("mv experiment-%d.xlsx %s/%s" % (i, rootdir, dirName), shell=True)
+subprocess.call("mv function_size_cm.xlsx %s/%s" % (rootdir, dirName), shell=True)
+subprocess.call("mv function_size_fs_cm.xlsx %s/%s" % (rootdir, dirName), shell=True)
