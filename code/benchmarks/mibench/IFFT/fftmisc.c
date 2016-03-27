@@ -63,8 +63,9 @@ unsigned NumberOfBitsNeeded ( unsigned PowerOfTwo )
     for ( i=0; ; i++ )
     {
         if ( PowerOfTwo & (1 << i) )
-            return i;
+            break;
     }
+    return i;
 }
 
 

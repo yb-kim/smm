@@ -306,7 +306,8 @@ down by an amount equal to the value of the pixel pointed to by p,
 #define  exit_error(IFB,IFC) { fprintf(stderr,IFB,IFC); exit(0); }
 #define  FTOI(a) ( (a) < 0 ? ((int)(a-0.5)) : ((int)(a+0.5)) )
      typedef  unsigned char uchar;
-     typedef  struct {int x,y,info, dx, dy, I;} CORNER_LIST[MAX_CORNERS];
+     struct __CORNER_LIST {int x,y,info, dx, dy, I;};
+     typedef  struct __CORNER_LIST CORNER_LIST[MAX_CORNERS];
 
      /* }}} */
      /* {{{ usage() */

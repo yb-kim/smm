@@ -1,34 +1,25 @@
 FFT
-[fft_float IsPowerOfTwo NumberOfBitsNeeded ReverseBits CheckPointer main] 6 43 1060 394.8
-
+No possible mapping
 
 
 susan.edges
-[susan_principle susan_principle_small median susan_edges susan_edges_small corner_draw] 6 141 7844 2083.2
-
 [susan_smoothing] 1 1545 1545 1545.0
 
-[put_image int_to_uchar setup_brightness_lut getint usage susan_corners susan_corners_quick main get_image enlarge edge_draw susan_thin] 12 138 4525 1149.1
+[put_image int_to_uchar setup_brightness_lut getint usage susan_corners susan_corners_quick main get_image susan_principle susan_principle_small median enlarge edge_draw susan_thin susan_edges susan_edges_small corner_draw] 18 138 7844 1460.4
 
 
 
 susan.smoothing
 [susan_smoothing] 1 1545 1545 1545.0
 
-[susan_corners susan_corners_quick susan_principle susan_principle_small median susan_thin] 6 452 4525 2155.3
-
-[put_image int_to_uchar setup_brightness_lut getint usage main get_image enlarge edge_draw susan_edges susan_edges_small corner_draw] 12 138 7844 1113.0
+[put_image int_to_uchar setup_brightness_lut getint usage susan_corners susan_corners_quick main get_image susan_principle susan_principle_small median enlarge edge_draw susan_thin susan_edges susan_edges_small corner_draw] 18 138 7844 1460.4
 
 
 
 susan.corners
 [susan_smoothing] 1 1545 1545 1545.0
 
-[int_to_uchar susan_corners susan_corners_quick enlarge susan_edges susan_edges_small] 6 482 7844 3092.8
-
-[susan_principle_small median susan_thin corner_draw] 4 141 2469 1054.5
-
-[put_image setup_brightness_lut getint usage main get_image susan_principle edge_draw] 8 138 1299 439.1
+[put_image int_to_uchar setup_brightness_lut getint usage susan_corners susan_corners_quick main get_image susan_principle susan_principle_small median enlarge edge_draw susan_thin susan_edges susan_edges_small corner_draw] 18 138 7844 1460.4
 
 
 
@@ -41,17 +32,16 @@ No possible mapping
 
 
 rijndael.encode
-No possible mapping
+[decfile main set_key encrypt decrypt fillrand encfile] 7 190 4743 1766.7
+
 
 
 sha
-[sha_print sha_init sha_update sha_final sha_stream byte_reverse sha_transform main] 8 31 596 183.5
-
+No possible mapping
 
 
 IFFT
-[fft_float IsPowerOfTwo NumberOfBitsNeeded ReverseBits CheckPointer main] 6 43 1060 394.8
-
+No possible mapping
 
 
 rijndael.decode
@@ -72,11 +62,9 @@ adpcm.decode
 No possible mapping
 
 benchmark	min	avg	max
-FFT	43	394.833333	1060
-susan.edges	1824	4777.250000	13914
-susan.smoothing	2135	4813.333333	13914
-susan.corners	2306	6131.458333	13157
-sha	31	183.500000	596
-IFFT	43	394.833333	1060
+susan.edges	1683	3005.444444	9389
+susan.smoothing	1683	3005.444444	9389
+susan.corners	1683	3005.444444	9389
+rijndael.encode	190	1766.714286	4743
 rijndael.decode	190	1766.714286	4743
 stringsearch	143	166.000000	195

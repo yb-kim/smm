@@ -5,3 +5,4 @@ LLVM_DIR=~/workspace/spm_code_management/smm_llvm_build
 CLANG_DIR=$LLVM_DIR/tools/clang/tools
 
 $LLVM_DIR/Debug+Asserts/bin/functionSplitter $@ -- 
+echo $?

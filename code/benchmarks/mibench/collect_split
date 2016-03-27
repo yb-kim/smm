@@ -25,7 +25,7 @@ except:
 
 def getBenchmarkSizes():
     try:
-        with open(benchPath+"/__function_sizes") as f:
+        with open(benchPath+"/__function_sizes_split") as f:
             return pickle.load(f)
     except:
         pass
@@ -36,7 +36,7 @@ def getBenchmarkSizes():
         os.chdir(directory)
         functionSizes = {}
         functions = []
-        with open("_func_size") as funcSize:
+        with open("function-split/_func_size") as funcSize:
             for line in funcSize:
                 tokens = line.split(" ")
                 functionName = tokens[0]
@@ -44,7 +44,7 @@ def getBenchmarkSizes():
                 functionSizes[functionName] = functionSize
 
         try:
-            with open("_mapping") as mappingFile:
+            with open("function-split/_mapping") as mappingFile:
                 mappingFile.readline()
                 for line in mappingFile:
                     tokens = line.split(" ")
@@ -68,8 +68,9 @@ def getBenchmarkSizes():
 def getRegions():
     benchmarks = {}
     for directory in directories:
-        fileName = directory + "/_mapping"
+        fileName = directory + "/function-split/_mapping"
         if not os.path.isfile(fileName):
+            print fileName, "does not exist"
             benchmarks[directory] = False
             continue
         with open(fileName) as mappingFile:
@@ -90,7 +91,7 @@ if command == "functionSize":
 
     benchmarks = getBenchmarkSizes()
 
-    with open("functionSize", "w") as outFile:
+    with open("functionSize_split", "w") as outFile:
         for benchmark in benchmarks:
             out = []
             out.append(benchmark)
@@ -145,7 +146,7 @@ if command == "regions":
     sizeByBenchmarks = getBenchmarkSizes()
     summary = []
     summary.append("benchmark\tmin\tavg\tmax")
-    with open("regions", "w") as outFile:
+    with open("regions_split", "w") as outFile:
         lines = []
         for benchmark in benchmarks:
             lines.append(benchmark)

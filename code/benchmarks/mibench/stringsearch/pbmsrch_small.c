@@ -48,8 +48,8 @@ void init_search(const char *string)
 
 char *strsearch(const char *string)
 {
-	register size_t shift;
-	register size_t pos = len - 1;
+	size_t shift;
+	size_t pos = len - 1;
 	char *here;
 	size_t limit=strlen(string);
 

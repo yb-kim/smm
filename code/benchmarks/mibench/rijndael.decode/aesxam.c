@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
     if(argc != 5 || (toupper(*argv[3]) != 'D' && toupper(*argv[3]) != 'E'))
     {
 	printf("usage: rijndael in_filename out_filename [d/e] key_in_hex\n"); 
-	err = -1; goto exit;
+	err = -1; return err;
     }
 
     cp = argv[4];   /* this is a pointer to the hexadecimal key digits  */
@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
 	else                            /* error if not hexadecimal     */
 	{
 	    printf("key must be in hexadecimal notation\n"); 
-	    err = -2; goto exit;
+	    err = -2; return err;
 	}
 
 	/* store a key byte for each pair of hexadecimal digits         */
@@ -267,12 +267,12 @@ int main(int argc, char *argv[])
     if(*cp)
     {
 	printf("The key value is too long\n"); 
-	err = -3; goto exit;
+	err = -3; return err;
     }
     else if(i < 32 || (i & 15))
     {
 	printf("The key length must be 32, 48 or 64 hexadecimal digits\n");
-	err = -4; goto exit;
+	err = -4; return err;
     }
 
     key_len = i / 2;
@@ -280,13 +280,13 @@ int main(int argc, char *argv[])
     if(!(fin = fopen(argv[1], "rb")))   /* try to open the input file */
     {
 	printf("The input file: %s could not be opened\n", argv[1]); 
-	err = -5; goto exit;
+	err = -5; return err;
     }
 
     if(!(fout = fopen(argv[2], "wb")))  /* try to open the output file */
     {
 	printf("The output file: %s could not be opened\n", argv[1]); 
-	err = -6; goto exit;
+	err = -6; return err;
     }
 
     if(toupper(*argv[3]) == 'E')
@@ -301,11 +301,4 @@ int main(int argc, char *argv[])
 
 	err = decfile(fin, fout, ctx, argv[1], argv[2]);
     }
-exit:   
-    if(fout) 
-	fclose(fout);
-    if(fin)
-	fclose(fin);
-
-    return err;
 }

@@ -124,9 +124,9 @@ DWORD updateCRC32(unsigned char ch, DWORD crc)
 
 Boolean_T crc32file(char *name, DWORD *crc, long *charcnt)
 {
-      register FILE *fin;
-      register DWORD oldcrc32;
-      register int c;
+      FILE *fin;
+      DWORD oldcrc32;
+      int c;
 
       oldcrc32 = 0xFFFFFFFF; *charcnt = 0;
 #ifdef MSDOS
@@ -158,7 +158,7 @@ Boolean_T crc32file(char *name, DWORD *crc, long *charcnt)
 
 DWORD crc32buf(char *buf, size_t len)
 {
-      register DWORD oldcrc32;
+      DWORD oldcrc32;
 
       oldcrc32 = 0xFFFFFFFF;
 
@@ -176,7 +176,7 @@ main(int argc, char *argv[])
 {
       DWORD crc;
       long charcnt;
-      register int errors = 0;
+      int errors = 0;
 
       while(--argc > 0)
       {
