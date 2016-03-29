@@ -29,14 +29,14 @@ def getStatsHelper(ws, progName, expType, CMType):
     output = subprocess.Popen("grep system.cpu.workload.num_dmacalls results/"+expType+"/"+CMType+"/stats.txt", stdout=subprocess.PIPE, shell=True).communicate()[0]
     tempList = output.split()
     numDMA = float(tempList[1])
-    print numDMA
+    #print numDMA
     ws.cell(row = r, column = c).value = numDMA
     c = c+1
 
     output = subprocess.Popen("grep system.cpu.workload.bytes_transferred_dma results/"+expType+"/"+CMType+"/stats.txt", stdout=subprocess.PIPE, shell=True).communicate()[0]
     tempList = output.split()
     DMASize = float(tempList[1])
-    print DMASize
+    #print DMASize
     ws.cell(row = r, column = c).value = DMASize
     c = c+1
 
@@ -152,14 +152,14 @@ def getStats(expType):
             directories.append(path)
     #   directories = ['stringsearch','test2']
     directories.remove('patricia')
-    print directories
+    #print directories
 
 
     global r
     r = 2
     for directory in directories:
         os.chdir(directory)
-        print directory
+        #print directory
         getStatsHelper(ws1, directory, expType, "smm");
         getStatsHelper(ws2, directory, expType, "smmcm");
         getStatsHelper(ws3, directory, expType, "fs_smmcm");
@@ -194,6 +194,7 @@ def getStats(expType):
 
     for i in range(len(directories)):
         row = i+2
+        ws4.cell(row=row, column=1).value = ws2.cell(row=row, column=1).value
         ws4.cell(row=row, column=2).value = ws2.cell(row=row, column=5).value
         ws4.cell(row=row, column=3).value = ws3.cell(row=row, column=5).value
         ws4.cell(row=row, column=4).value = ws2.cell(row=row, column=4).value
@@ -238,10 +239,21 @@ def getStats(expType):
                         sizes[function] = size
                         ws.cell(row=row, column=1).value = function
                         ws.cell(row=row, column=2).value = size
+
                         row += 1
+
+                ch1 = openpyxl.chart.BarChart()
+                ch1.type = "col"
+                data = openpyxl.chart.Reference(ws, min_col=2, min_row=1, max_col=2, max_row=row-1)
+                titles = openpyxl.chart.Reference(ws, min_col=1, min_row=2, max_row=row-1)
+                ch1.add_data(data, titles_from_data=True)
+                ch1.set_categories(titles)
+                ws.add_chart(ch1, "D4")
+
                 temp = "=MAX(%s!%s:%s)" % (directory, "B2", ws.cell(row=row-1, column=2).coordinate)
                 ws1.cell(row=summaryRow, column=2).value = temp
             except:
+                print "fail to open file"
                 pass
 
 
