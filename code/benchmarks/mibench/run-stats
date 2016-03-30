@@ -6,6 +6,8 @@ import datetime
 
 r = 0
 
+spmSizes = {}
+
 def getStatsHelper(ws, progName, expType, CMType):
     #       print progName + ' ' + expType + ' ' + CMType
     #       print r
@@ -86,6 +88,7 @@ def getStatsHelper(ws, progName, expType, CMType):
 
     with open("results/%s/%s/regions.txt" % (expType, CMType)) as regionFile:
         spmSize = int(regionFile.readline().split()[-1])
+        spmSizes[progName] = spmSize
         usedSpmSpace = 0
         nRegions = int(regionFile.readline().split()[-1])
 
@@ -285,7 +288,11 @@ def getStats(expType):
                 ws.cell(row=row, column=1).value = 'Region'
                 ws.cell(row=row, column=2).value = 'Size'
                 ws.cell(row=row, column=3).value = 'minFunctionSize'
+                ws.cell(row=row, column=4).value = 'SpmSize'
                 row += 1
+
+                startRow = row
+                ws.cell(row=row, column=4).value = spmSizes[directory]
                 
                 i = 0
                 for region in regions:
@@ -294,10 +301,12 @@ def getStats(expType):
                     ws.cell(row=row, column=3).value = min([sizes[function] for function in region])
                     i += 1
                     row += 1
+                ws.cell(row=row, column=2).value = "=SUM(%s!%s:%s)" % (
+                    directory, ws.cell(row=startRow, column=2).coordinate,
+                    ws.cell(row=row-1, column=2).coordinate)
 
-            except:
-                print "fail to open file"
-                pass
+            except Exception, e:
+                print directory, e
 
 
             summaryRow += 1
