@@ -212,6 +212,8 @@ def getStats(expType):
 
         ws1['A1'] = "benchmarks"
         ws1['B1'] = "max function size"
+        ws1['C1'] = "min function size"
+
 
         summaryRow = 2
 
@@ -222,8 +224,28 @@ def getStats(expType):
 
             ws['A1'] = "Function"
             ws['B1'] = "Size"
+            ws['C1'] = "Region"
 
             os.chdir(directory)
+
+            if wb == wb_size:
+                fileName = "_mapping"
+            else:
+                fileName = "function-split/_mapping"
+
+            regions = []
+            regionsByName = {}
+            try:
+                with open(fileName) as inFile:
+                    nRegions = int(inFile.readline())
+                    regions = [[] for i in range(nRegions)]
+                    for line in inFile:
+                        function, region = line.split()
+                        region = int(region)
+                        regions[region].append(function)
+                        regionsByName[function] = region
+            except:
+                pass
 
             if wb == wb_size:
                 fileName = "_func_size"
@@ -235,10 +257,13 @@ def getStats(expType):
                     row = 2
                     for line in inFile:
                         function, size = line.split()
+                        if not function in regionsByName.keys():
+                            continue
                         size = int(size)
                         sizes[function] = size
                         ws.cell(row=row, column=1).value = function
                         ws.cell(row=row, column=2).value = size
+                        ws.cell(row=row, column=3).value = regionsByName[function]
 
                         row += 1
 
@@ -252,6 +277,24 @@ def getStats(expType):
 
                 temp = "=MAX(%s!%s:%s)" % (directory, "B2", ws.cell(row=row-1, column=2).coordinate)
                 ws1.cell(row=summaryRow, column=2).value = temp
+
+                temp = "=MIN(%s!%s:%s)" % (directory, "B2", ws.cell(row=row-1, column=2).coordinate)
+                ws1.cell(row=summaryRow, column=3).value = temp
+
+                row += 1
+                ws.cell(row=row, column=1).value = 'Region'
+                ws.cell(row=row, column=2).value = 'Size'
+                ws.cell(row=row, column=3).value = 'minFunctionSize'
+                row += 1
+                
+                i = 0
+                for region in regions:
+                    ws.cell(row=row, column=1).value = i
+                    ws.cell(row=row, column=2).value = max([sizes[function] for function in region])
+                    ws.cell(row=row, column=3).value = min([sizes[function] for function in region])
+                    i += 1
+                    row += 1
+
             except:
                 print "fail to open file"
                 pass
@@ -277,5 +320,7 @@ subprocess.call("mkdir %s/%s" % (rootdir, dirName), shell=True)
 for i in range(10, 110, 10):
     getStats("%s" % i)
     subprocess.call("mv experiment-%d.xlsx %s/%s" % (i, rootdir, dirName), shell=True)
+getStats("%s" % "min")
+subprocess.call("mv experiment-%s.xlsx %s/%s" % ("min", rootdir, dirName), shell=True)
 subprocess.call("mv function_size_cm.xlsx %s/%s" % (rootdir, dirName), shell=True)
 subprocess.call("mv function_size_fs_cm.xlsx %s/%s" % (rootdir, dirName), shell=True)

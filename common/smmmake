@@ -662,9 +662,9 @@ def create_smm_code_runme(arguments="", infile = "", outfile=""):
 				cm_text = cm_text + " --output=\"cm_" + outfile + "\""
 				ecm_text = ecm_text + " --output=\"ecm_" + outfile + "\""
 			f.write(prolog + "\n")
-			f.write(text + "\n")
+			#f.write(text + "\n")
 			f.write(cm_text + "\n")
-			f.write(ecm_text + "\n")
+			#f.write(ecm_text + "\n")
     		subprocess.Popen("chmod 755 runme", stdout=subprocess.PIPE, shell=True)
 
 # Create a makefile for a cache-based architecture
