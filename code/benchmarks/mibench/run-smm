@@ -10,10 +10,9 @@ for path in os.listdir(cwd):
 #directories = [ 'patricia', 'susan.smoothings']
 #directories.remove('patricia')
 
-experiments = range(10, 110, 10)
+experiments = range(10, 110, 10) + ["min"]
 experiments = ["min"]
-directories = ["stringsearch"]
-#directories = ["rijndael.decode"]
+directories = ["basicmath"]
 
 minSizes = {
     "stringsearch": 195,
@@ -21,7 +20,8 @@ minSizes = {
     "adpcm.encode": 349,
     "rijndael.decode": 4743,
     "CRC32": 183,
-    "basicmath": 1064,
+    #"basicmath": 1064,
+    "basicmath": 1558,
     "FFT": 1060,
     "susan.corners": 7844,
     "susan.edges": 7844,
@@ -39,7 +39,7 @@ for directory in directories:
     command = ""
     for spmRatio in experiments:
         if spmRatio == "min":
-            newSize = int(minSizes[directory]*1.2)
+            newSize = int(minSizes[directory])
             fileName = "configure-smm"
             temp = []
             with open(fileName) as configureFile:
@@ -69,22 +69,28 @@ for directory in directories:
 
         makeCommand = "make clean; smmmake --clean; ./configure-smm; make; make cmh; make cm; ./runme;"
         #makeCommand = "make clean; smmmake --clean; ./configure-smm; make; make cmh; make cm;"
-        subprocess.call(makeCommand, shell=True)
+        makeCommand += "rm -rf info; mkdir info; mv _func_size cm_output* info;"
+        print "call smmcm"
+        #subprocess.call(makeCommand, shell=True)
 
         command = "../run-function-split ../%s" % (directory)
         subprocess.call(command, shell=True)
         os.chdir("function-split")
+        print "call fs_smmcm"
         subprocess.call(makeCommand, shell=True)
         os.chdir("../")
 
         if spmRatio == "min":
             command = "rm -rf results/%s; mkdir results/%s; mv m5out/smm m5out/smmcm results/%s;" % ("min", "min", "min")
+            command += "cp -rf info results/%s/smm; cp -rf info results/%s/smmcm; rm -rf info;" % ("min", "min")
             command += "mv function-split/m5out/smm results/%s/fs_smm; mv function-split/m5out/smmcm results/%s/fs_smmcm;" % (
                 spmRatio, spmRatio)
+            command += "cp -rf function-split/info results/%s/fs_smmcm; rm -rf function-split/info;" % ("min")
         else:
             command = "rm -rf results/%d; mkdir results/%d; mv m5out/smm m5out/smmcm results/%d;" % (spmRatio, spmRatio, spmRatio)
-            command += "mv function-split/m5out/smm results/%d/fs_smm; mv function-split/m5out/smmcm results/%d/fs_smmcm;" % (
-                spmRatio, spmRatio)
+            command += "cp -r info results/%d/smm; cp -r info results/%d/smmcm; rm -rf info;" % (spmRatio, spmRatio)
+            command += "mv function-split/m5out/smm results/%d/fs_smm; mv function-split/m5out/smmcm results/%d/fs_smmcm;" % (spmRatio, spmRatio)
+            command += "cp -r function-split/info results/%d/fs_smmcm; rm -rf function-split/info;" % (spmRatio)
         subprocess.call(command, shell=True)
 
         spmSize = 0
