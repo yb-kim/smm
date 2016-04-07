@@ -1,0 +1,46 @@
+#! /usr/bin/env python
+import os
+import sys
+import subprocess
+
+cwd = os.getcwd()
+directories = []
+for path in os.listdir(cwd):
+    if os.path.isdir(path):
+        directories.append(path)
+
+directories = [sys.argv[1]]
+
+for directory in directories:
+    os.chdir(directory)
+    if os.path.isdir("function-split"):
+        command = "rm -rf function-split"
+        subprocess.call(command, shell=True)
+    items = []
+    cfiles = []
+    for item in os.listdir(os.getcwd()):
+        if not item in ["backup"]:
+            items.append(item)
+        if item.endswith(".c"):
+            cfiles.append(item)
+    command = "mkdir function-split; cp -r " + " ".join(items) + " function-split"
+    subprocess.call(command, shell=True)
+
+    os.chdir("function-split")
+    j = 0
+    for cfile in cfiles:
+        p = subprocess.Popen(["function-split", cfile], stdout=subprocess.PIPE)
+
+        out, err = p .communicate()
+        nrGenerated = int(out.strip())
+        j += nrGenerated
+
+        for i in range(nrGenerated):
+            command = "sed -i -- 's/__generated__%d(/__generated__%d(/g' _modified.c" % (i, j )
+            subprocess.call(command, shell=True)
+            j += 1
+
+        command = "mv _modified.c %s" % (cfile)
+        subprocess.call(command, shell=True)
+
+    os.chdir(cwd)

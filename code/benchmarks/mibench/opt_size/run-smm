@@ -1,0 +1,190 @@
+#! /usr/bin/env python
+import os
+import subprocess
+
+cwd = os.getcwd()
+directories = []
+for path in os.listdir(cwd):
+    if os.path.isdir(path):
+        directories.append(path)
+#directories = [ 'patricia', 'susan.smoothings']
+#directories.remove('patricia')
+
+experiments = range(10, 110, 10) + ["min"]
+experiments = ["min"]
+#directories = ["rijndael.decode"]
+#directories = ["basicmath"]
+
+minSizes = {
+    "stringsearch": 195,
+    "adpcm.decode": 264,
+    "adpcm.encode": 349,
+    "rijndael.decode": 4743,
+    "CRC32": 183,
+    "basicmath": 1064,
+    #"basicmath": 1558,
+    "FFT": 1060,
+    "susan.corners": 5179,
+    "susan.edges": 7844,
+    "sha": 596,
+    "rijndael.encode": 4743,
+    "IFFT": 1060,
+    "susan.smoothing": 7844
+}
+
+thresholds = {
+    "stringsearch": 195,
+    "adpcm.decode": 264,
+    "adpcm.encode": 349,
+    "rijndael.decode": 4743,
+    "CRC32": 183,
+    "basicmath": 1064,
+    "FFT": 1060,
+    "susan.corners": 5179,
+    "susan.edges": 7844,
+    "sha": 596,
+    "rijndael.encode": 4743,
+    "IFFT": 1060,
+    "susan.smoothing": 7844
+}
+
+thresholds = {
+    "stringsearch": 195,
+    "adpcm.decode": 264,
+    "adpcm.encode": 349,
+    "rijndael.decode": 4743,
+    "CRC32": 183,
+    "basicmath": 1064,
+    "FFT": 1060,
+    "susan.corners": 5179,
+    "susan.edges": 7844,
+    "sha": 596,
+    "rijndael.encode": 4743,
+    "IFFT": 1060,
+    "susan.smoothing": 7844
+}
+
+thresholds = {
+    "stringsearch": 195,
+    "adpcm.decode": 264,
+    "adpcm.encode": 349,
+    "rijndael.decode": 4743,
+    "CRC32": 183,
+    "basicmath": 1064,
+    "FFT": 1060,
+    "susan.corners": 7844,
+    "susan.edges": 7844,
+    "sha": 596,
+    "rijndael.encode": 4743,
+    "IFFT": 1060,
+    "susan.smoothing": 7844
+}
+
+for directory in directories:
+    if directory in ["dijkstra", "patricia"]:
+        continue
+    os.chdir(directory)
+    subprocess.call("rm -rf results; mkdir results", shell=True)
+    command = ""
+    for spmRatio in experiments:
+        if spmRatio == "min":
+            newSize = int(minSizes[directory])
+            fileName = "configure-smm"
+            temp = []
+            with open(fileName) as configureFile:
+                for line in configureFile:
+                    if line.startswith("#") or not line.strip():
+                        temp.append(line)
+                        continue
+                    if not line.startswith("smmmake"):
+                        temp.append(line)
+                        continue
+                    sizeOptionIndex = line.find("--spm-size")
+                    if sizeOptionIndex > 0:
+                        config = line[:sizeOptionIndex]
+                    else:
+                        config = line
+                    config = config.strip() + " "
+                    config += "--spm-size %d\n" % newSize
+                    temp.append(config)
+
+            with open(fileName, "w") as configureFile:
+                configureFile.writelines(temp)
+        else:
+            print "running %s with %d%% spm" % (directory, spmRatio)
+
+            command = "../collect setSpmSize %d" % (spmRatio)
+            subprocess.call(command, shell=True)
+
+        makeCommand = "make clean; smmmake --clean; ./configure-smm; make; make cmh; make cm; ./runme;"
+        makeCommand = "make clean; smmmake --clean; ./configure-smm; make; make cmh; make cm;"
+        makeCommand += "rm -rf info; mkdir info; cp _func_size cm_output* info;"
+        print "call smmcm"
+        subprocess.call(makeCommand, shell=True)
+
+        command = "../run-function-split ../%s" % (directory)
+        subprocess.call(command, shell=True)
+        os.chdir("function-split")
+        print "call fs_smmcm"
+        subprocess.call(makeCommand, shell=True)
+        os.chdir("../")
+
+        if spmRatio == "min":
+            command = "rm -rf results/%s; mkdir results/%s; mv m5out/smm m5out/smmcm results/%s;" % ("min", "min", "min")
+            command += "cp -rf info results/%s/smm; cp -rf info results/%s/smmcm; rm -rf info;" % ("min", "min")
+            command += "mv function-split/m5out/smm results/%s/fs_smm; mv function-split/m5out/smmcm results/%s/fs_smmcm;" % (
+                spmRatio, spmRatio)
+            command += "cp -rf function-split/info results/%s/fs_smmcm; rm -rf function-split/info;" % ("min")
+        else:
+            command = "rm -rf results/%d; mkdir results/%d; mv m5out/smm m5out/smmcm results/%d;" % (spmRatio, spmRatio, spmRatio)
+            command += "cp -r info results/%d/smm; cp -r info results/%d/smmcm; rm -rf info;" % (spmRatio, spmRatio)
+            command += "mv function-split/m5out/smm results/%d/fs_smm; mv function-split/m5out/smmcm results/%d/fs_smmcm;" % (spmRatio, spmRatio)
+            command += "cp -r function-split/info results/%d/fs_smmcm; rm -rf function-split/info;" % (spmRatio)
+        subprocess.call(command, shell=True)
+
+        spmSize = 0
+        nRegions = 0
+        try:
+            if spmRatio == "min":
+                fileName = "results/%s/smmcm/regions.txt" % spmRatio
+            else:
+                fileName = "results/%d/smmcm/regions.txt" % spmRatio
+            with open(fileName, "w") as outFile:
+                with open("configure-smm") as configureFile:
+                    for line in configureFile:
+                        if line.startswith("#") or not line.strip():
+                            continue
+                        if not line.startswith("smmmake"):
+                            continue
+                        sizeOptionIndex = line.find("--spm-size")
+                        if sizeOptionIndex > 0:
+                            spmSize = int(line.split()[-1])
+                        else:
+                            spmSize = 0
+
+                try:
+                    with open("_mapping") as mappingFile:
+                        nRegions = int(mappingFile.readline())
+                except:
+                    nRegions = 0
+
+                outFile.write("spmSize: %d\n" % spmSize)
+                outFile.write("nRegions: %d\n" %nRegions)
+
+            if spmRatio == "min":
+                fileName = "results/%s/fs_smmcm/regions.txt" % spmRatio
+            else: 
+                fileName = "results/%d/fs_smmcm/regions.txt" % spmRatio
+            with open(fileName, "w") as outFile:
+                try:
+                    with open("function-split/_mapping") as mappingFile:
+                        nRegions = int(mappingFile.readline())
+                except:
+                    nRegions = 0
+
+                outFile.write("spmSize: %d\n" % spmSize)
+                outFile.write("nRegions: %d\n" %nRegions)
+        except:
+            pass
+
+    os.chdir(cwd)

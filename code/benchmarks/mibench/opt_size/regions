@@ -1,0 +1,70 @@
+FFT
+No possible mapping
+
+
+susan.edges
+[susan_smoothing] 1 1545 1545 1545.0
+
+[put_image int_to_uchar setup_brightness_lut getint usage susan_corners susan_corners_quick main get_image susan_principle susan_principle_small median enlarge edge_draw susan_thin susan_edges susan_edges_small corner_draw] 18 138 7844 1460.4
+
+
+
+susan.smoothing
+[susan_smoothing] 1 1545 1545 1545.0
+
+[put_image int_to_uchar setup_brightness_lut getint usage susan_corners susan_corners_quick main get_image susan_principle susan_principle_small median enlarge edge_draw susan_thin susan_edges susan_edges_small corner_draw] 18 138 7844 1460.4
+
+
+
+susan.corners
+[susan_smoothing] 1 1545 1545 1545.0
+
+[put_image int_to_uchar setup_brightness_lut getint usage susan_corners susan_corners_quick main get_image susan_principle susan_principle_small median enlarge edge_draw susan_thin susan_edges susan_edges_small corner_draw] 18 138 7844 1460.4
+
+
+
+adpcm.encode
+No possible mapping
+
+
+basicmath
+No possible mapping
+
+
+rijndael.encode
+[decfile main set_key encrypt decrypt fillrand encfile] 7 190 4743 1766.7
+
+
+
+sha
+No possible mapping
+
+
+IFFT
+No possible mapping
+
+
+rijndael.decode
+[decfile main set_key encrypt decrypt fillrand encfile] 7 190 4743 1766.7
+
+
+
+CRC32
+No possible mapping
+
+
+stringsearch
+[init_search strsearch main] 3 143 195 166.0
+
+
+
+adpcm.decode
+No possible mapping
+
+benchmark	min	avg	max
+susan.edges	1683	3005.444444	9389
+susan.smoothing	1683	3005.444444	9389
+susan.corners	1683	3005.444444	9389
+rijndael.encode	190	1766.714286	4743
+rijndael.decode	190	1766.714286	4743
+stringsearch	143	166.000000	195
