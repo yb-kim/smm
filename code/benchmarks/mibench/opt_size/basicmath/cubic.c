@@ -34,13 +34,11 @@ void SolveCubic(double  a,
       }
       else
       {
-          "__SPLIT_START";
             *solutions = 1;
             x[0] = pow(sqrt(R2_Q3)+fabs(R), 1/3.0);
             x[0] += Q/x[0];
             x[0] *= (R < 0.0) ? 1 : -1;
             x[0] -= a1/3.0;
-          "__SPLIT_END";
       }
 }
 

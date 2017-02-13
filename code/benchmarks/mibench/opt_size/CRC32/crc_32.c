@@ -138,11 +138,13 @@ Boolean_T crc32file(char *name, DWORD *crc, long *charcnt)
             perror(name);
             return Error_;
       }
+      "__SPLIT_START";
       while ((c=getc(fin))!=EOF)
       {
             ++*charcnt;
             oldcrc32 = UPDC32(c, oldcrc32);
       }
+      "__SPLIT_END";
 
       if (ferror(fin))
       {

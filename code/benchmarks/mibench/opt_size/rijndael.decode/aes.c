@@ -722,13 +722,20 @@ cf_dec c_name(encrypt)(const byte in_blk[], byte out_blk[], const c_name(aes) *c
 
     switch(cx->Nrnd)
     {
-    case 14:    round(fwd_rnd,  b1, b0, kp         ); 
-                round(fwd_rnd,  b0, b1, kp + nc    ); kp += 2 * nc;
-    case 12:    round(fwd_rnd,  b1, b0, kp         ); 
-                round(fwd_rnd,  b0, b1, kp + nc    ); kp += 2 * nc;
+    case 14:    {
+                    "__SPLIT_START";
+                    round(fwd_rnd,  b1, b0, kp         ); 
+                    round(fwd_rnd,  b0, b1, kp + nc    ); kp += 2 * nc;
+                    "__SPLIT_END";
+                }
+    case 12:    {
+                    "__SPLIT_START";
+                    round(fwd_rnd,  b1, b0, kp         ); 
+                    round(fwd_rnd,  b0, b1, kp + nc    ); kp += 2 * nc;
+                    "__SPLIT_END";
+                }
     case 10:    
                 {
-                    "__SPLIT_START";
                     round(fwd_rnd,  b1, b0, kp         );             
                     round(fwd_rnd,  b0, b1, kp +     nc);
                     round(fwd_rnd,  b1, b0, kp + 2 * nc); 
@@ -739,7 +746,6 @@ cf_dec c_name(encrypt)(const byte in_blk[], byte out_blk[], const c_name(aes) *c
                     round(fwd_rnd,  b0, b1, kp + 7 * nc);
                     round(fwd_rnd,  b1, b0, kp + 8 * nc);
                     round(fwd_lrnd, b0, b1, kp + 9 * nc);
-                    "__SPLIT_END";
                 }
     }
 #elif defined(PARTIAL_UNROLL)
@@ -791,16 +797,21 @@ cf_dec c_name(decrypt)(const byte in_blk[], byte out_blk[], const c_name(aes) *c
                 round(inv_rnd,  b0, b1, kp + nc    ); kp += 2 * nc;
     case 12:    round(inv_rnd,  b1, b0, kp         );
                 round(inv_rnd,  b0, b1, kp + nc    ); kp += 2 * nc;
-    case 10:    round(inv_rnd,  b1, b0, kp         );             
-                round(inv_rnd,  b0, b1, kp +     nc);
-                round(inv_rnd,  b1, b0, kp + 2 * nc); 
-                round(inv_rnd,  b0, b1, kp + 3 * nc);
-                round(inv_rnd,  b1, b0, kp + 4 * nc); 
-                round(inv_rnd,  b0, b1, kp + 5 * nc);
-                round(inv_rnd,  b1, b0, kp + 6 * nc); 
-                round(inv_rnd,  b0, b1, kp + 7 * nc);
-                round(inv_rnd,  b1, b0, kp + 8 * nc);
-                round(inv_lrnd, b0, b1, kp + 9 * nc);
+    case 10:    
+                {
+                "__SPLIT_START";
+                    round(inv_rnd,  b1, b0, kp         );             
+                    round(inv_rnd,  b0, b1, kp +     nc);
+                    round(inv_rnd,  b1, b0, kp + 2 * nc); 
+                    round(inv_rnd,  b0, b1, kp + 3 * nc);
+                    round(inv_rnd,  b1, b0, kp + 4 * nc); 
+                    round(inv_rnd,  b0, b1, kp + 5 * nc);
+                    round(inv_rnd,  b1, b0, kp + 6 * nc); 
+                    round(inv_rnd,  b0, b1, kp + 7 * nc);
+                    round(inv_rnd,  b1, b0, kp + 8 * nc);
+                    round(inv_lrnd, b0, b1, kp + 9 * nc);
+                "__SPLIT_END";
+                }
     }
 #elif defined(PARTIAL_UNROLL)
     {   word    rnd;

@@ -1143,6 +1143,7 @@ void susan_edges(in,r,mid,bp,max_no,x_size,y_size)
 		r[i*x_size+j] = max_no - n;
 	}
 
+    "__SPLIT_START";
     for (i=4;i<y_size-4;i++)
 	for (j=4;j<x_size-4;j++)
 	{
@@ -1304,6 +1305,7 @@ void susan_edges(in,r,mid,bp,max_no,x_size,y_size)
 		}
 	    }
 	}
+    "__SPLIT_END";
 }
 
 /* }}} */

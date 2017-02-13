@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
 	coeff[i] = rand()%1000;
 	amp[i] = rand()%1000;
     }
+    "__SPLIT_START";
     for(i=0;i<MAXSIZE;i++) 
     {
 	/*   RealIn[i]=rand();*/
@@ -82,6 +83,7 @@ int main(int argc, char *argv[]) {
     free(coeff);
     free(amp);
     //exit(0);
+    "__SPLIT_END";
     return 0;
 
 

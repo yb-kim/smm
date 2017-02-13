@@ -12,8 +12,8 @@ for path in os.listdir(cwd):
 
 experiments = range(10, 110, 10) + ["min"]
 experiments = ["min"]
-#directories = ["rijndael.decode"]
-#directories = ["basicmath"]
+#directories = ["adpcm.encode"]
+directories = ["susan.smoothing", "adpcm.decode", "adpcm.encode"]
 
 minSizes = {
     "stringsearch": 195,
@@ -32,53 +32,23 @@ minSizes = {
     "susan.smoothing": 7844
 }
 
-thresholds = {
-    "stringsearch": 195,
-    "adpcm.decode": 264,
+opt_size = {
+    "stringsearch": 176,
+    "adpcm.decode": 266,
     "adpcm.encode": 349,
     "rijndael.decode": 4743,
-    "CRC32": 183,
-    "basicmath": 1064,
-    "FFT": 1060,
+    "CRC32": 167,
+    "basicmath": 734,
+    "FFT": 763,
     "susan.corners": 5179,
-    "susan.edges": 7844,
-    "sha": 596,
+    "susan.edges": 6929,
+    "sha": 331,
     "rijndael.encode": 4743,
-    "IFFT": 1060,
-    "susan.smoothing": 7844
+    "IFFT": 763,
+    "susan.smoothing": 3334
 }
 
-thresholds = {
-    "stringsearch": 195,
-    "adpcm.decode": 264,
-    "adpcm.encode": 349,
-    "rijndael.decode": 4743,
-    "CRC32": 183,
-    "basicmath": 1064,
-    "FFT": 1060,
-    "susan.corners": 5179,
-    "susan.edges": 7844,
-    "sha": 596,
-    "rijndael.encode": 4743,
-    "IFFT": 1060,
-    "susan.smoothing": 7844
-}
-
-thresholds = {
-    "stringsearch": 195,
-    "adpcm.decode": 264,
-    "adpcm.encode": 349,
-    "rijndael.decode": 4743,
-    "CRC32": 183,
-    "basicmath": 1064,
-    "FFT": 1060,
-    "susan.corners": 7844,
-    "susan.edges": 7844,
-    "sha": 596,
-    "rijndael.encode": 4743,
-    "IFFT": 1060,
-    "susan.smoothing": 7844
-}
+minSizes = opt_size
 
 for directory in directories:
     if directory in ["dijkstra", "patricia"]:
@@ -117,7 +87,7 @@ for directory in directories:
             subprocess.call(command, shell=True)
 
         makeCommand = "make clean; smmmake --clean; ./configure-smm; make; make cmh; make cm; ./runme;"
-        makeCommand = "make clean; smmmake --clean; ./configure-smm; make; make cmh; make cm;"
+        #makeCommand = "make clean; smmmake --clean; ./configure-smm; make; make cmh; make cm;"
         makeCommand += "rm -rf info; mkdir info; cp _func_size cm_output* info;"
         print "call smmcm"
         subprocess.call(makeCommand, shell=True)

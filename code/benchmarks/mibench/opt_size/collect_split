@@ -4,7 +4,7 @@ import subprocess
 import sys
 import pickle
 
-benchPath = "/home/ybkim/workspace/spm_code_management/smm/code/benchmarks/mibench/opt_size"
+benchPath = "/home/ybkim/workspace/code_management/smm/code/benchmarks/mibench/opt_size"
 
 os.chdir(benchPath)
 cwd = os.getcwd()

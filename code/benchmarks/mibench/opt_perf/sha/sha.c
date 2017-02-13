@@ -113,6 +113,7 @@ void sha_update(SHA_INFO *sha_info, BYTE *buffer, int count)
     }
     sha_info->count_lo += (LONG) count << 3;
     sha_info->count_hi += (LONG) count >> 29;
+    "__SPLIT_START";
     while (count >= 128) {
  memcpy(sha_info->data, buffer, 128);
 
@@ -123,6 +124,7 @@ void sha_update(SHA_INFO *sha_info, BYTE *buffer, int count)
  count -= 128;
     }
     memcpy(sha_info->data, buffer, count);
+    "__SPLIT_END";
 }
 
 
@@ -164,9 +166,11 @@ void sha_stream(SHA_INFO *sha_info, FILE *fin)
     BYTE data[8192];
 
     sha_init(sha_info);
+    //"__SPLIT_START";
     while ((i = fread(data, 1, 8192, fin)) > 0) {
  sha_update(sha_info, data, i);
     }
+    //"__SPLIT_END";
     sha_final(sha_info);
 }
 

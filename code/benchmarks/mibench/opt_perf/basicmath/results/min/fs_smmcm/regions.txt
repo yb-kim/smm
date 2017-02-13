@@ -1,2 +1,0 @@
-spmSize: 1558
-nRegions: 1

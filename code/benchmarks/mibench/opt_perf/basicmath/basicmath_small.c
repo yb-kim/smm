@@ -42,6 +42,7 @@ int main(void)
     printf(" %f",x[i]);
   printf("\n");
   /* Now solve some random equations */
+  "__SPLIT_START";
   for(a1=1;a1<10;a1++) {
     for(b1=10;b1>0;b1--) {
       for(c1=5;c1<15;c1+=0.5) {
@@ -78,6 +79,7 @@ int main(void)
   puts("");
   for (X = 0.0; X <= (2 * PI + 1e-6); X += (PI / 180))
     printf("%.12f radians = %3.0f degrees\n", X, rad2deg(X));
+  "__SPLIT_END";
   
   
   return 0;

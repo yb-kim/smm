@@ -75,12 +75,14 @@ void fft_float (
     **   Do simultaneous data copy and bit-reversal ordering into outputs...
     */
 
+    "__SPLIT_START";
     for ( i=0; i < NumSamples; i++ )
     {
         j = ReverseBits ( i, NumBits );
         RealOut[j] = RealIn[i];
         ImagOut[j] = (ImagIn == NULL) ? 0.0 : ImagIn[i];
     }
+    "__SPLIT_END";
 
     /*
     **   Do the FFT itself...

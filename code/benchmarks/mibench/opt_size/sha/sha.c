@@ -51,6 +51,7 @@ static void sha_transform(SHA_INFO *sha_info)
     for (i = 20; i < 40; ++i) {
  temp = ((A << 5) | (A >> (32 - 5))) + (B ^ C ^ D) + E + W[i] + 0x6ed9eba1L; E = D; D = C; C = ((B << 30) | (B >> (32 - 30))); B = A; A = temp;
     }
+    "__SPLIT_START";
     for (i = 40; i < 60; ++i) {
  temp = ((A << 5) | (A >> (32 - 5))) + ((B & C) | (B & D) | (C & D)) + E + W[i] + 0x8f1bbcdcL; E = D; D = C; C = ((B << 30) | (B >> (32 - 30))); B = A; A = temp;
     }
@@ -63,6 +64,7 @@ static void sha_transform(SHA_INFO *sha_info)
     sha_info->digest[2] += C;
     sha_info->digest[3] += D;
     sha_info->digest[4] += E;
+    "__SPLIT_END";
 }
 
 

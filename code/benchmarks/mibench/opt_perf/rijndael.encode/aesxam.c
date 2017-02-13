@@ -110,6 +110,7 @@ int encfile(FILE *fin, FILE *fout, aes *ctx, char* fn)
     /* block in the lower 4 bits        */
     inbuf[0] = ((char)flen.__pos & 15) | (inbuf[0] & ~15);
 
+    "__SPLIT_START";
     while(!feof(fin))               /* loop to encrypt the input file   */
     {                               /* input 1st 16 bytes to buf[1..16] */
 	i = fread(inbuf + 16 - l, 1, l, fin);  /*  on 1st round byte[0] */
@@ -129,6 +130,7 @@ int encfile(FILE *fin, FILE *fout, aes *ctx, char* fn)
 	/* in all but first round read 16   */
 	l = 16;                     /* bytes into the buffer            */
     }
+    "__SPLIT_END";
 
     /* except for files of length less than two blocks we now have one  */
     /* byte from the previous block and 'i' bytes from the current one  */
@@ -187,6 +189,7 @@ int decfile(FILE *fin, FILE *fout, aes *ctx, char* ifn, char* ofn)
     bp1 = inbuf1;           /* set up pointers to two input buffers     */
     bp2 = inbuf2;
 
+    "__SPLIT_START";
     while(1)
     {
 	i = fread(bp1, 1, 16, fin);     /* read next encrypted block    */
@@ -212,6 +215,7 @@ int decfile(FILE *fin, FILE *fout, aes *ctx, char* ifn, char* ofn)
 
 	l = i; tp = bp1, bp1 = bp2, bp2 = tp;
     }
+    "__SPLIT_END";
 
     /* we have now output 16 * n + 15 bytes of the file with any left   */
     /* in outbuf waiting to be output. If x bytes remain to be written, */

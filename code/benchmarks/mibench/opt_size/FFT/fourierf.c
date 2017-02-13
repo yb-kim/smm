@@ -87,6 +87,7 @@ void fft_float (
     */
 
     BlockEnd = 1;
+    "__SPLIT_START";
     for ( BlockSize = 2; BlockSize <= NumSamples; BlockSize <<= 1 )
     {
         double delta_angle = angle_numerator / (double)BlockSize;
@@ -130,6 +131,7 @@ void fft_float (
 
         BlockEnd = BlockSize;
     }
+    "__SPLIT_END";
 
     /*
     **   Need to normalize if inverse transform...

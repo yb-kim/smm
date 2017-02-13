@@ -1082,6 +1082,7 @@ void susan_edges(in,r,mid,bp,max_no,x_size,y_size)
 
     memset (r,0,x_size * y_size * sizeof(int));
 
+    "__SPLIT_START";
     for (i=3;i<y_size-3;i++)
 	for (j=3;j<x_size-3;j++)
 	{
@@ -1142,6 +1143,7 @@ void susan_edges(in,r,mid,bp,max_no,x_size,y_size)
 	    if (n<=max_no)
 		r[i*x_size+j] = max_no - n;
 	}
+    "__SPLIT_END";
 
     for (i=4;i<y_size-4;i++)
 	for (j=4;j<x_size-4;j++)
@@ -1152,6 +1154,7 @@ void susan_edges(in,r,mid,bp,max_no,x_size,y_size)
 		n=max_no - m;
 		cp=bp + in[i*x_size+j];
 
+        "__SPLIT_START";
 		if (n>600)
 		{
 		    p=in + (i-3)*x_size + j - 1;
@@ -1230,6 +1233,7 @@ void susan_edges(in,r,mid,bp,max_no,x_size,y_size)
 		}
 		else 
 		    do_symmetry=1;
+        "__SPLIT_END";
 
 		if (do_symmetry==1)
 		{ 
@@ -1642,6 +1646,7 @@ void susan_corners(in,r,bp,max_no,corner_list,x_size,y_size)
 										    }
 										}}}}}}}}}}}}}}}}}}}
 
+    "__SPLIT_START";
     /* to locate the local maxima */
     n=0;
     for (i=5;i<y_size-5;i++)
@@ -1749,6 +1754,7 @@ void susan_corners(in,r,bp,max_no,corner_list,x_size,y_size)
 
     free(cgx);
     free(cgy);
+    "__SPLIT_END";
 
 }
 

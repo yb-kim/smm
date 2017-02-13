@@ -1,7 +1,0 @@
-encrypt 4516
-set_key 1211
-decrypt 4743
-decfile 679
-fillrand 190
-encfile 467
-main 569

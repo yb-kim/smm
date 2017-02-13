@@ -152,6 +152,7 @@ int main()
 	};
 	int i;
 
+    "__SPLIT_START";
 	for (i = 0; find_strings[i]; i++)
 	{
 		init_search(find_strings[i]);
@@ -162,6 +163,7 @@ int main()
 			printf(" [\"%s\"]", here);
 		putchar('\n');
 	}
+    "__SPLIT_END";
 
 	return 0;
 }

@@ -15,6 +15,7 @@ short	sbuf[NSAMPLES];
 int main() {
     int n;
 
+    "__SPLIT_START";
     while(1) {
 	n = read(0, sbuf, NSAMPLES*2);
 	if ( n < 0 ) {
@@ -25,6 +26,7 @@ int main() {
 	adpcm_coder(sbuf, abuf, n/2, &state);
 	write(1, abuf, n/4);
     }
+    "__SPLIT_END";
     //fprintf(stderr, "Final valprev=%d, index=%d\n",
 	    //state.valprev, state.index);
     printf("Final valprev=%d, index=%d\n", state.valprev, state.index);

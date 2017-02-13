@@ -10,11 +10,11 @@ for path in os.listdir(cwd):
 #directories = [ 'patricia', 'susan.smoothings']
 #directories.remove('patricia')
 
-experiments = range(10, 110, 10) + ["min"]
+#experiments = range(10, 110, 10) + ["min"]
 experiments = ["min"]
-#directories = ["rijndael.decode"]
-#directories = ["stringsearch"]
-
+#directories = ["rijndael.decode", "stringsearch", "adpcm.decode", "adpcm.encode", "rijndael.encode"]
+skip = ["susan.corners", "susan.edges", "susan.smoothing", "dijkstra", "patricia"]
+directories = ["sha"]
 minSizes = {
     "stringsearch": 195,
     "adpcm.decode": 264,
@@ -32,55 +32,60 @@ minSizes = {
     "susan.smoothing": 7844
 }
 
-thresholds = {
-    "stringsearch": 195,
-    "adpcm.decode": 264,
-    "adpcm.encode": 349,
-    "rijndael.decode": 4743,
+opt_perf = {
+    "stringsearch": 355,
+    "adpcm.decode": 374,
+    "adpcm.encode": 475,
+    "rijndael.decode": 5954, #bad mapping
     "CRC32": 183,
-    "basicmath": 1064,
-    "FFT": 1060,
+    "basicmath": 1348,
+    "FFT": 1370,
     "susan.corners": 5179,
     "susan.edges": 7844,
-    "sha": 596,
-    "rijndael.encode": 4743,
-    "IFFT": 1060,
+    "sha": 787, #bad mapping
+    "rijndael.encode": 5954, #bad mapping
+    "IFFT": 1370,
     "susan.smoothing": 7844
 }
 
-thresholds = {
-    "stringsearch": 195,
-    "adpcm.decode": 264,
-    "adpcm.encode": 349,
-    "rijndael.decode": 4743,
-    "CRC32": 183,
-    "basicmath": 1064,
-    "FFT": 1060,
-    "susan.corners": 5179,
-    "susan.edges": 7844,
-    "sha": 596,
-    "rijndael.encode": 4743,
-    "IFFT": 1060,
-    "susan.smoothing": 7844
+original_2_regions = {
+    "stringsearch": 355,
+    "adpcm.decode": 409,
+    "adpcm.encode": 503,
+    "rijndael.decode": 9259, #bad mapping
+    "CRC32": 314,
+    "basicmath": 1798,
+    "FFT": 2103,
+    "susan.corners": 0,
+    "susan.edges": 0,
+    "sha": 787, #bad mapping
+    "rijndael.encode": 9259,
+    "IFFT": 2103,
+    "susan.smoothing": 0
 }
 
-thresholds = {
-    "stringsearch": 195,
-    "adpcm.decode": 264,
-    "adpcm.encode": 349,
-    "rijndael.decode": 4743,
-    "CRC32": 183,
-    "basicmath": 1064,
-    "FFT": 1060,
-    "susan.corners": 7844,
-    "susan.edges": 7844,
-    "sha": 596,
-    "rijndael.encode": 4743,
-    "IFFT": 1060,
-    "susan.smoothing": 7844
+max_sizes = {
+    "stringsearch": 498,
+    "adpcm.decode": 409,
+    "adpcm.encode": 503,
+    "rijndael.decode": 12375,
+    "CRC32": 314,
+    "basicmath": 1878,
+    "FFT": 2369,
+    "susan.corners": 0,
+    "susan.edges": 0,
+    "sha": 1468,
+    "rijndael.encode": 12375,
+    "IFFT": 2369,
+    "susan.smoothing": 0
 }
+
+minSizes = opt_perf
+#minSizes = original_2_regions
 
 for directory in directories:
+    if directory in skip:
+        continue
     if directory in ["dijkstra", "patricia"]:
         continue
     os.chdir(directory)
@@ -89,35 +94,32 @@ for directory in directories:
     for spmRatio in experiments:
         if spmRatio == "min":
             newSize = int(minSizes[directory])
-            fileName = "configure-smm"
-            temp = []
-            with open(fileName) as configureFile:
-                for line in configureFile:
-                    if line.startswith("#") or not line.strip():
-                        temp.append(line)
-                        continue
-                    if not line.startswith("smmmake"):
-                        temp.append(line)
-                        continue
-                    sizeOptionIndex = line.find("--spm-size")
-                    if sizeOptionIndex > 0:
-                        config = line[:sizeOptionIndex]
-                    else:
-                        config = line
-                    config = config.strip() + " "
-                    config += "--spm-size %d\n" % newSize
-                    temp.append(config)
-
-            with open(fileName, "w") as configureFile:
-                configureFile.writelines(temp)
         else:
-            print "running %s with %d%% spm" % (directory, spmRatio)
+            newSize = int(max_sizes[directory] * spmRatio / 100.0)
+        fileName = "configure-smm"
+        temp = []
+        with open(fileName) as configureFile:
+            for line in configureFile:
+                if line.startswith("#") or not line.strip():
+                    temp.append(line)
+                    continue
+                if not line.startswith("smmmake"):
+                    temp.append(line)
+                    continue
+                sizeOptionIndex = line.find("--spm-size")
+                if sizeOptionIndex > 0:
+                    config = line[:sizeOptionIndex]
+                else:
+                    config = line
+                config = config.strip() + " "
+                config += "--spm-size %d\n" % newSize
+                temp.append(config)
 
-            command = "../collect setSpmSize %d" % (spmRatio)
-            subprocess.call(command, shell=True)
+        with open(fileName, "w") as configureFile:
+            configureFile.writelines(temp)
 
         makeCommand = "make clean; smmmake --clean; ./configure-smm; make; make cmh; make cm; ./runme;"
-        makeCommand = "make clean; smmmake --clean; ./configure-smm; make; make cmh; make cm;"
+        #makeCommand = "make clean; smmmake --clean; ./configure-smm; make; make cmh; make cm;"
         makeCommand += "rm -rf info; mkdir info; cp _func_size cm_output* info;"
         print "call smmcm"
         subprocess.call(makeCommand, shell=True)
@@ -171,6 +173,10 @@ for directory in directories:
                 outFile.write("spmSize: %d\n" % spmSize)
                 outFile.write("nRegions: %d\n" %nRegions)
 
+        except:
+            pass
+
+        try:
             if spmRatio == "min":
                 fileName = "results/%s/fs_smmcm/regions.txt" % spmRatio
             else: 

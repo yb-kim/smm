@@ -98,6 +98,7 @@ adpcm_coder(indata, outdata, len, state)
     
     bufferstep = 1;
 
+    "__SPLIT_START";
     for ( ; len > 0 ; len-- ) {
 	val = *inp++;
 
@@ -170,6 +171,7 @@ adpcm_coder(indata, outdata, len, state)
     
     state->valprev = valpred;
     state->index = index;
+    "__SPLIT_END";
 }
 
 void

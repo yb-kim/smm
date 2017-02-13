@@ -12,7 +12,7 @@ typedef unsigned long LONG;
 #define SHA_BLOCKSIZE		128
 #define SHA_DIGESTSIZE		20
 
-typedef struct {
+typedef struct _SHA_INFO {
     LONG digest[5];		/* message digest */
     LONG count_lo, count_hi;	/* 64-bit bit count */
     LONG data[16];		/* SHA data buffer */
